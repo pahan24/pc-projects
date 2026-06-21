@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSH Config Reference</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #e0e0e0;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1a1a;
+    }
+
+    .container {
+      background: #202020;
+      padding: 30px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      color: #58a6ff;
+      border-bottom: 2px solid #58a6ff;
+      padding-bottom: 10px;
+    }
+
+    .intro {
+      background: #1c2d3a;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 25px;
+      color: #b8d4e8;
+    }
+
+    h2 {
+      color: #79c0ff;
+      margin-top: 30px;
+      margin-bottom: 15px;
+    }
+
+    .placeholder-item {
+      margin-bottom: 15px;
+      padding: 12px;
+      background: #1c1c1c;
+      border-left: 3px solid #58a6ff;
+    }
+
+    .placeholder-code {
+      font-family: 'Courier New', monospace;
+      background: #3a3a3a;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-weight: bold;
+      color: #7ee787;
+    }
+
+    .placeholder-desc {
+      margin-top: 5px;
+      color: #c9d1d9;
+    }
+
+    .example {
+      margin-top: 5px;
+      padding: 8px;
+      background: #2d2413;
+      border-left: 3px solid #e3b341;
+      font-style: italic;
+      color: #e3d18a;
+    }
+
+    .warning {
+      margin-top: 5px;
+      padding: 8px;
+      background: #2d2413;
+      font-style: italic;
+      color: #e3d18a;
+    }
+
+    footer {
+      background: #17181b;
+      color: #e0e0e0;
+      text-align: center;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+
+<body>
+  <p class="warning">There is no direct or plain SSH mode in this app, all connection to SSH always via local HTTP
+    Proxy Server
+    first even if you
+    set proxy type to none. but we can achieve it using "Response Position" option.</p>
+
+  <div class="container">
+    <h1>HTTP Response</h1>
+
+    <h2>Response Position</h2>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">pre_request</span> default value</div>
+      <div class="placeholder-desc">Sends HTTP Response immediately after SSH connection requested but before
+        payload
+        request.
+        Use this option if you are using plain SSH server and no payload. this is standard HTTP response of SSH
+        with HTTP Proxy
+        connection.
+      </div>
+    </div>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">post_request</span></div>
+      <div class="placeholder-desc">Sends HTTP Response after payload requested. Replacing any HTTP response status from
+        the server with
+        selected "Response Status" string.
+        Use this option if you are using non plain SSH server (e.g Websocket based server) and use payload.
+      </div>
+    </div>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">both</span></div>
+      <div class="placeholder-desc">Send HTTP Responses in both positions.
+      </div>
+    </div>
+
+    <h2>Response Status</h2>
+    <p class="intro">Usually you never needed to change this option. default value is a common HTTP.
+      response.</p>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">manual</span></div>
+      <div class="placeholder-desc">Send HTTP Response using manual value, this option supports payload placeholders.
+      </div>
+    </div>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">200 Connection established</span> default value</div>
+      <div class="placeholder-desc">Sends HTTP Response with hardcoded value "HTTP/1.1 200 Connection
+        established\r\n\r\n".
+      </div>
+    </div>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">200 OK</span></div>
+      <div class="placeholder-desc">Sends HTTP Response with hardcoded value "HTTP/1.1 200 OK\r\n\r\n".
+      </div>
+    </div>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">disabled</span></div>
+      <div class="placeholder-desc">Not sending any HTTP response from client side, gets original HTTP response from
+        the server.
+      </div>
+    </div>
+
+  </div>
+  <div class="container">
+    <h1>HTTP Request (Payload Placeholders)</h1>
+
+    <div class="intro">
+      <strong>What are placeholders?</strong> These are special keywords that get automatically replaced with actual
+      values when connection requested. They help you create dynamic and flexible HTTP payloads without hardcoding
+      values. Note that these keywords are case sensitive and must in lowercase.
+    </div>
+
+    <h2>Request Data</h2>
+    <p>These extract HTTP request headers from connection</p>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[method]</span></div>
+      <div class="placeholder-desc">Gets replaced with the HTTP method being used in request.</div>
+      <div class="example">Example: If connection make a GET request, this becomes "GET". in SSH connection always returns "CONNECT"</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[protocol]</span></div>
+      <div class="placeholder-desc">Gets replaced with the HTTP protocol version being used.</div>
+      <div class="example">Example: "HTTP/1.1" or "HTTP/1.0"</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[host]</span></div>
+      <div class="placeholder-desc">Gets replaced with the destination hostname or IP address you're connecting to.</div>
+      <div class="example">Example: "example.com" or "192.168.1.1"</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[port]</span></div>
+      <div class="placeholder-desc">Gets replaced with the destination port number you're connecting to.</div>
+      <div class="example">Example: "443", "22"</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[host_port]</span></div>
+      <div class="placeholder-desc">Combines the destination host and destination port with a colon separator.</div>
+      <div class="example">Example: "example.com:443" or "example.com:22"</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[proxy_host]</span></div>
+      <div class="placeholder-desc">Gets replaced with the proxy address (only if proxy is enabled in your
+        config).</div>
+      <div class="example">Example: "proxy.example.com"</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[proxy_port]</span></div>
+      <div class="placeholder-desc">Gets replaced with the proxy address port number (only if proxy is enabled in your
+        config).</div>
+      <div class="example">Example: "8080" or "3128"</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[netdata]</span> or <span class="placeholder-code">[raw]</span></div>
+      <div class="placeholder-desc">Gets replaced with the original request headers without line ending.</div>
+      <div class="example">Example: "CONNECT example.com:443 HTTP/1.1"</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[real_raw]</span></div>
+      <div class="placeholder-desc">Gets replaced with the complete original request headers exactly as they were sent.
+      </div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[auth]</span></div>
+      <div class="placeholder-desc">Gets replaced with the proxy authentication header in base64 format (only if proxy
+        authentication is enabled). If not enabled, this becomes empty.</div>
+      <div class="example">Example: "Proxy-Authorization: Basic am9objpkb2U=" (where the encoded part is your
+        username:password)</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[ua]</span></div>
+      <div class="placeholder-desc">Gets replaced with the platform specific User-Agent string.</div>
+    </div>
+
+    <h2>Line Break Characters</h2>
+    <p>These placeholders insert special line break characters.</p>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[cr]</span> or <span class="placeholder-code">\r</span></div>
+      <div class="placeholder-desc">Inserts a Carriage Return character.
+      </div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[lf]</span> or <span class="placeholder-code">\n</span></div>
+      <div class="placeholder-desc">Inserts a Line Feed character.</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[crlf]</span></div>
+      <div class="placeholder-desc">Inserts both Carriage Return and Line Feed together (standard line ending in HTTP
+        headers).</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[lfcr]</span></div>
+      <div class="placeholder-desc">Inserts Line Feed followed by Carriage Return (reverse order).</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[cr*x]</span>, <span class="placeholder-code">[lf*x]</span>, <span
+          class="placeholder-code">[crlf*x]</span>, <span class="placeholder-code">[lfcr*x]</span></div>
+      <div class="placeholder-desc">Repeats the line break character multiple times. Replace "x" with a number.</div>
+      <div class="example">Example: [crlf*2] will insert two line breaks, [lf*3] will insert three line feeds</div>
+    </div>
+
+    <h2>Dynamic Value</h2>
+    <p>These allow you to use different values each time or rotate through values.</p>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[random=value1;value2;value3]</span></div>
+      <div class="placeholder-desc">Randomly picks one value from the list each time. Separate values with semicolons.
+      </div>
+      <div class="example">Example: [random=GET;POST;HEAD] will randomly choose GET, POST, or HEAD each time</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[rotate=value1;value2;value3]</span></div>
+      <div class="placeholder-desc">Cycles through values in order. First request uses value1, second uses value2, third
+        uses value3, then back to value1.</div>
+      <div class="example">Example: [rotate=server1;server2;server3] will use server1, then server2, then server3, then
+        repeat</div>
+    </div>
+
+    <h2>Payload Splitter</h2>
+    <p>These split your request into multiple parts and send them separately.</p>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[split]</span></div>
+      <div class="placeholder-desc">Splits your payload at this point and sends the parts as two separate requests
+        immediately</div>
+      <div class="example">Example: "CONNECT [host]:[port] HTTP/1.1[split]GET / HTTP/1.1[crlf][crlf]..." sends "CONNECT
+        example.com:443 HTTP/1.1" first, then the rest</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[instant_split]</span></div>
+      <div class="placeholder-desc">Same as [split] but with 0.25 second delay</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[delay_split]</span> or <span class="placeholder-code">[split_delay]</span>
+      </div>
+      <div class="placeholder-desc">Same as [split] but with 1 second delay</div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">[split=1000]</span></div>
+      <div class="placeholder-desc">Splits your payload and sends the second part after a custom delay. Replace the
+        number with milliseconds (1000 = 1 second).</div>
+      <div class="example">Example: [split=100] waits 0.1, [split=500] waits 0.5 seconds, [split=2000] waits 2 seconds
+        seconds</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1></h1>
+
+    <h2>TLS Type</h2>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">none</span> default value</div>
+      <div class="placeholder-desc">Connect SSH via HTTP connection
+      </div>
+    </div>
+
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">tls</span></div>
+      <div class="placeholder-desc">Connect SSH via TLS connection (Secured)
+      </div>
+    </div>
+
+    <h2>Proxy Type</h2>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">none</span> default value</div>
+      <div class="placeholder-desc">Direct destination to SSH connection
+      </div>
+    </div>
+    <div class="placeholder-item">
+      <div><span class="placeholder-code">http</span></div>
+      <div class="placeholder-desc">Use proxy as destination to SSH Connection, this connection type is depend on TLS
+        Type option.
+      </div>
+      <div class="example">This proxy becomes HTTPS if you choose TLS type to tls otherwise HTTP</div>
+    </div>
+    <footer>
+      © 2025 NetMod VPN
+    </footer>
+  </div>
+</body>
+
+</html>

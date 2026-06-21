@@ -1,0 +1,14 @@
+21-06-2026 15:36:44.012 App version 6.3.0 release-build 483
+21-06-2026 15:36:44.029 Core version: 1.3.0
+21-06-2026 15:36:44.034 Xray version: 25.5.16
+21-06-2026 15:36:44.108 Running on SAMSUNG ELECTRONICS CO.,LTD (Samsung DeskTop System); 64-bit; Microsoft Windows 10 Pro v10.0.19045
+21-06-2026 15:36:45.883 Network up Ethernet (Ethernet), address: 192.168.8.181, dns: 192.168.8.1
+21-06-2026 15:36:48.512 Starting service
+21-06-2026 15:36:48.515 Using profile Remarks: US-1-cloudnetfreev2ray-c377, Address: us.cloudnet.one:443, Protocol: trojan, Transfer Protocol: tcp, TLS type: tls, SNI: aka.ms
+21-06-2026 15:36:48.575 Upstream connection and DNS resolution of outbound connection via index 22/192.168.8.1
+21-06-2026 15:36:48.608 Version: Xray core 25.5.16
+21-06-2026 15:36:49.203 Binding SOCKS port to 1080
+21-06-2026 15:36:49.204 Xray core started
+21-06-2026 15:36:49.216 Using custom DNS
+21-06-2026 15:36:49.217 Preparing VPN routes
+21-06-2026 15:36:55.619 VPN service started
