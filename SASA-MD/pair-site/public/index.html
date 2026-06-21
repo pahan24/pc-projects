@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASA MD — Device Pairing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════ SASA MD PAIR SITE ════════════ */
+:root {
+  --c1: #00ffcc;  /* teal neon */
+  --c2: #ff00aa;  /* magenta neon */
+  --c3: #7b2fff;  /* violet */
+  --c4: #00aaff;  /* blue neon */
+  --bg: #03010f;
+  --bg2: #0a0520;
+  --surface: rgba(255,255,255,0.03);
+  --border: rgba(0,255,204,0.15);
+  --text: #d4e8ff;
+  --text2: #6a7f99;
+  --success: #00ff88;
+  --error: #ff3366;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── Animated background ─ */
+.bg-scene {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.12;
+  animation: drift 20s infinite alternate ease-in-out;
+}
+
+.bg-orb:nth-child(1) { width: 600px; height: 600px; top: -15%; left: -10%; background: var(--c3); animation-duration: 18s; }
+.bg-orb:nth-child(2) { width: 500px; height: 500px; bottom: -10%; right: -5%; background: var(--c2); animation-duration: 22s; animation-delay: -5s; }
+.bg-orb:nth-child(3) { width: 400px; height: 400px; top: 40%; left: 40%; background: var(--c1); animation-duration: 25s; animation-delay: -10s; opacity: 0.07; }
+
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(40px, -40px) scale(1.1); }
+}
+
+/* ── Grid overlay ─ */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,255,204,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,204,0.025) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* ── Scanlines ─ */
+.bg-scan {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+}
+
+/* ── Layout ─ */
+.wrapper {
+  position: relative; z-index: 10;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 20px 60px;
+}
+
+/* ── Status bar ─ */
+.status-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 32px;
+  background: rgba(3,1,15,0.8);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+}
+
+.status-bar-brand {
+  font-family: var(--font-head);
+  font-size: 1.1rem; font-weight: 800;
+  color: var(--c1);
+  text-shadow: 0 0 20px var(--c1);
+  letter-spacing: 0.05em;
+}
+
+.status-indicator {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.8rem; color: var(--text2); font-family: var(--font-mono);
+}
+
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text2);
+  transition: background 0.4s;
+}
+.dot.online   { background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse-dot 2s infinite; }
+.dot.offline  { background: var(--error); }
+
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ── Hero section ─ */
+.hero { margin-top: 100px; text-align: center; max-width: 600px; width: 100%; }
+
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--c1);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.hero-title {
+  font-family: var(--font-head);
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 800;
+  line-height: 0.95;
+  margin-bottom: 16px;
+}
+
+.hero-title .glow {
+  color: var(--c1);
+  text-shadow: 0 0 40px var(--c1), 0 0 80px rgba(0,255,204,0.3);
+}
+
+.hero-title .dim { color: rgba(212,232,255,0.3); }
+
+.hero-sub {
+  font-size: 1rem; color: var(--text2); line-height: 1.6;
+  margin-bottom: 48px;
+  font-weight: 400;
+}
+
+/* ── Card ─ */
+.card {
+  width: 100%; max-width: 480px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(30px);
+  box-shadow: 0 0 0 1px rgba(0,255,204,0.05), 0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--c1), var(--c2), transparent);
+  opacity: 0.5;
+}
+
+.card::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: 24px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,255,204,0.04), transparent 70%);
+  pointer-events: none;
+}
+
+.card-title {
+  font-family: var(--font-head);
+  font-size: 1.4rem; font-weight: 800;
+  color: white; margin-bottom: 8px;
+}
+
+.card-sub { font-size: 0.875rem; color: var(--text2); margin-bottom: 32px; }
+
+/* ── Input ─ */
+.input-group { position: relative; margin-bottom: 20px; }
+
+.input-label {
+  display: block;
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--text2); text-transform: uppercase;
+  letter-spacing: 0.12em; margin-bottom: 8px;
+  font-family: var(--font-mono);
+}
+
+.phone-input {
+  width: 100%; padding: 16px 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+}
+
+.phone-input::placeholder { color: var(--text2); opacity: 0.5; }
+
+.phone-input:focus {
+  border-color: var(--c1);
+  background: rgba(0,255,204,0.04);
+  box-shadow: 0 0 0 3px rgba(0,255,204,0.1), 0 0 30px rgba(0,255,204,0.05);
+}
+
+/* ── Button ─ */
+.btn-pair {
+  width: 100%; padding: 18px;
+  background: linear-gradient(135deg, var(--c1), var(--c4));
+  border: none; border-radius: 14px;
+  color: #000; font-weight: 700; font-size: 1rem;
+  font-family: var(--font-body);
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: all 0.3s;
+}
+
+.btn-pair:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(0,255,204,0.4), 0 0 0 1px rgba(0,255,204,0.3);
+}
+
+.btn-pair:active { transform: translateY(0); }
+
+.btn-pair:disabled {
+  opacity: 0.6; cursor: not-allowed; transform: none;
+}
+
+.btn-pair .btn-text { position: relative; z-index: 2; }
+
+.btn-pair::before {
+  content: '';
+  position: absolute; top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+  transform: scale(0);
+  transition: transform 0.5s;
+}
+.btn-pair:hover::before { transform: scale(1); }
+
+/* ── Loading ─ */
+.spinner {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle; margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Result area ─ */
+.result-area {
+  margin-top: 28px;
+  display: none;
+}
+
+.result-area.show { display: block; animation: fadeUp 0.5s ease forwards; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* ── Pair code display ─ */
+.pair-code-label {
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.18em; color: var(--text2); margin-bottom: 12px;
+  font-family: var(--font-mono);
+}
+
+.pair-code-box {
+  background: rgba(0,255,204,0.06);
+  border: 1px solid rgba(0,255,204,0.25);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.pair-code-box::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(0,255,204,0.08), transparent 70%);
+}
+
+.pair-code-value {
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 600;
+  color: var(--c1);
+  text-shadow: 0 0 30px rgba(0,255,204,0.5);
+  letter-spacing: 0.25em;
+  position: relative; z-index: 1;
+}
+
+.pair-code-hint {
+  font-size: 0.8rem; color: var(--text2); margin-top: 12px;
+  position: relative; z-index: 1;
+  font-family: var(--font-mono);
+}
+
+/* ── Error message ─ */
+.error-box {
+  background: rgba(255,51,102,0.08);
+  border: 1px solid rgba(255,51,102,0.25);
+  border-radius: 12px;
+  padding: 16px 20px;
+  color: var(--error);
+  font-size: 0.875rem;
+  display: flex; align-items: center; gap: 10px;
+}
+
+/* ── Steps guide ─ */
+.steps {
+  margin-top: 32px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.step {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+.step:hover { border-color: rgba(0,255,204,0.15); }
+
+.step-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--c3), var(--c4));
+  color: #fff; font-size: 0.75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-family: var(--font-mono);
+}
+
+.step-text { font-size: 0.875rem; color: var(--text2); line-height: 1.5; }
+.step-text strong { color: var(--text); }
+
+/* ── Footer ─ */
+footer {
+  margin-top: 60px; text-align: center;
+  font-size: 0.8rem; color: var(--text2);
+  opacity: 0.7;
+  font-family: var(--font-mono);
+}
+
+footer a { color: var(--c1); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ── Glow pulse animation ─ */
+@keyframes glow-pulse {
+  0%, 100% { text-shadow: 0 0 20px var(--c1), 0 0 40px rgba(0,255,204,0.3); }
+  50%       { text-shadow: 0 0 40px var(--c1), 0 0 80px rgba(0,255,204,0.5); }
+}
+.glow { animation: glow-pulse 3s infinite; }
+
+/* ── Success flash ─ */
+.success-ring {
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 2px solid var(--success);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  animation: success-pop 0.5s ease forwards;
+  box-shadow: 0 0 30px rgba(0,255,136,0.4);
+}
+
+@keyframes success-pop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* ── Responsive ─ */
+@media (max-width: 500px) {
+  .card { padding: 28px 20px; }
+  .pair-code-value { font-size: 1.8rem; letter-spacing: 0.2em; }
+  .status-bar { padding: 10px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-scene">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+<div class="bg-grid"></div>
+<div class="bg-scan"></div>
+
+<!-- Status bar -->
+<nav class="status-bar">
+  <div class="status-bar-brand">⚡ SASA MD</div>
+  <div class="status-indicator">
+    <div class="dot" id="status-dot"></div>
+    <span id="status-text">Checking...</span>
+  </div>
+</nav>
+
+<!-- Main content -->
+<div class="wrapper">
+  <div class="hero">
+    <div class="hero-eyebrow">⚡ WhatsApp Multi Device Bot</div>
+    <h1 class="hero-title">
+      <span class="glow">SASA</span><br>
+      <span class="dim">MD</span>
+    </h1>
+    <p class="hero-sub">Advanced automation bot with AI, media downloads, news & more.<br>Connect your device in seconds.</p>
+  </div>
+
+  <!-- Pair card -->
+  <div class="card" style="margin-top: 40px;">
+    <div class="card-title">📱 Pair Your Device</div>
+    <div class="card-sub">Generate a code to link WhatsApp without QR</div>
+
+    <div class="input-group">
+      <label class="input-label" for="phone">Phone Number</label>
+      <input
+        type="tel" id="phone"
+        class="phone-input"
+        placeholder="+94 71 234 5678"
+        autocomplete="tel"
+      >
+    </div>
+
+    <button class="btn-pair" id="pair-btn" onclick="generatePairCode()">
+      <span class="btn-text">⚡ Generate Pair Code</span>
+    </button>
+
+    <div class="result-area" id="result-area"></div>
+
+    <!-- Steps guide -->
+    <div class="steps" style="margin-top: 36px;">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Enter your <strong>phone number</strong> with country code (e.g. +94712345678)</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Click <strong>Generate Pair Code</strong> and wait for the 8-digit code</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Open WhatsApp → <strong>Linked Devices → Link with phone number</strong></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Enter the code — you're <strong>connected!</strong> 🎉</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>SASA MD v2.0.0 — Developed by <a href="#">PAHAN</a></p>
+  <p style="margin-top:6px">Built with ❤️ using <a href="https://github.com/WhiskeySockets/Baileys" target="_blank">Baileys MD</a></p>
+</footer>
+
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+<script>
+// ── Socket.io status ──────────────────────────────────
+const socket = io();
+const dot    = document.getElementById('status-dot');
+const stTxt  = document.getElementById('status-text');
+
+socket.on('status', ({ online }) => {
+  if (online) {
+    dot.className  = 'dot online';
+    stTxt.textContent = 'Bot Online';
+  } else {
+    dot.className  = 'dot offline';
+    stTxt.textContent = 'Bot Offline';
+  }
+});
+
+// ── Pair code generation ──────────────────────────────
+async function generatePairCode() {
+  const input = document.getElementById('phone').value.trim();
+  const btn   = document.getElementById('pair-btn');
+  const res   = document.getElementById('result-area');
+
+  if (!input) return showError('Please enter your phone number.');
+
+  const phone = input.replace(/[\s\-\(\)]/g, '');
+  if (!/^\+?[0-9]{10,15}$/.test(phone)) return showError('Invalid phone number format.');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-text"><span class="spinner"></span>Generating...</span>';
+  res.className = 'result-area';
+  res.innerHTML = '';
+
+  try {
+    const response = await fetch('/api/pair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    });
+    const data = await response.json();
+
+    if (data.success && data.code) {
+      showCode(data.code);
+    } else {
+      showError(data.error || 'Failed to generate code. Make sure bot is running.');
+    }
+  } catch (e) {
+    showError(`Connection error: ${e.message}`);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span class="btn-text">⚡ Generate Pair Code</span>';
+}
+
+function showCode(code) {
+  const res = document.getElementById('result-area');
+  res.innerHTML = `
+    <div class="success-ring">✓</div>
+    <div class="pair-code-label">Your Pair Code</div>
+    <div class="pair-code-box">
+      <div class="pair-code-value">${code}</div>
+      <div class="pair-code-hint">Enter this code in WhatsApp → Linked Devices</div>
+    </div>
+    <p style="text-align:center;font-size:.78rem;color:var(--text2);margin-top:12px;font-family:var(--font-mono)">
+      ⏰ Code expires in 60 seconds
+    </p>
+  `;
+  res.className = 'result-area show';
+
+  // Countdown
+  let t = 60;
+  const hint = res.querySelector('.pair-code-hint');
+  const iv = setInterval(() => {
+    if (--t <= 0) { clearInterval(iv); hint.textContent = 'Code expired — generate a new one.'; }
+  }, 1000);
+}
+
+function showError(msg) {
+  const res = document.getElementById('result-area');
+  res.innerHTML = `
+    <div class="error-box">
+      <span>⚠️</span>
+      <span>${msg}</span>
+    </div>
+  `;
+  res.className = 'result-area show';
+}
+
+// ── Enter key shortcut ────────────────────────────────
+document.getElementById('phone').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generatePairCode();
+});
+</script>
+</body>
+</html>

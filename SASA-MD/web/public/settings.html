@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASA MD — Settings Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:       #0b0c14;
+  --ink2:      #10121f;
+  --surface:   rgba(255,255,255,0.035);
+  --surface2:  rgba(255,255,255,0.06);
+  --border:    rgba(130,180,255,0.1);
+  --border-hi: rgba(130,180,255,0.25);
+  --accent:    #5b8fff;
+  --accent2:   #c084fc;
+  --success:   #34d399;
+  --danger:    #f87171;
+  --warn:      #fbbf24;
+  --text:      #d4dfff;
+  --muted:     rgba(180,200,255,0.4);
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Syne', sans-serif;
+  --radius:    14px;
+  --t:         all 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--ink);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Background ── */
+.bg {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+}
+.bg-mesh {
+  position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
+  background: conic-gradient(from 0deg at 35% 40%, #0a1628 0deg, #141030 90deg, #0e1824 180deg, #060f1a 270deg, #0a1628 360deg);
+  animation: rotMesh 40s linear infinite;
+  opacity: 0.7;
+}
+@keyframes rotMesh { to { transform: rotate(360deg); } }
+.bg-glow {
+  position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.06;
+}
+.bg-glow-1 { width: 500px; height: 500px; background: var(--accent);  top: 5%;  left: -10%; }
+.bg-glow-2 { width: 400px; height: 400px; background: var(--accent2); top: 50%; right: -5%; }
+.bg-grid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(130,180,255,0.018) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(130,180,255,0.018) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ── Layout ── */
+.app { position: relative; z-index: 1; }
+
+/* ── LOGIN SCREEN ── */
+#loginScreen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%; max-width: 420px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 44px 36px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.login-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 40%, var(--accent2) 60%, transparent);
+}
+
+.login-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  background: rgba(91,143,255,0.08);
+  border: 1px solid rgba(91,143,255,0.2);
+  border-radius: 100px;
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  font-family: var(--mono);
+}
+
+.login-title {
+  font-size: 1.75rem; font-weight: 800;
+  line-height: 1.1; margin-bottom: 6px;
+  background: linear-gradient(135deg, #fff 30%, var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-sub {
+  font-size: 0.82rem; color: var(--muted); margin-bottom: 32px;
+  font-family: var(--mono); font-weight: 300;
+}
+
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 7px; letter-spacing: 0.1em; text-transform: uppercase; }
+.field input {
+  width: 100%; padding: 13px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text); font-size: 0.9rem;
+  font-family: var(--mono);
+  outline: none; transition: var(--t);
+  letter-spacing: 0.02em;
+}
+.field input:focus {
+  border-color: var(--accent);
+  background: rgba(91,143,255,0.06);
+  box-shadow: 0 0 0 3px rgba(91,143,255,0.1);
+}
+.field input::placeholder { color: rgba(180,200,255,0.2); }
+
+.btn-login {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 10px;
+  color: #fff; font-size: 0.9rem; font-weight: 700;
+  font-family: var(--sans); cursor: pointer; letter-spacing: 0.05em;
+  transition: var(--t); position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(91,143,255,0.35); }
+.btn-login:active { transform: none; }
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.login-error {
+  margin-top: 14px; padding: 11px 14px;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 8px; color: var(--danger);
+  font-size: 0.82rem; display: none; animation: shake 0.4s ease;
+}
+.login-error.show { display: block; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%  { transform: translateX(-6px); }
+  75%  { transform: translateX(6px); }
+}
+
+/* ── MAIN PANEL ── */
+#mainPanel { display: none; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(11,12,20,0.8); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 32px;
+  display: flex; align-items: center; gap: 16px;
+}
+
+.topbar-logo {
+  font-size: 1.2rem; font-weight: 800; letter-spacing: 0.04em;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.topbar-badge {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--muted); letter-spacing: 0.05em;
+}
+
+.topbar-user {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+}
+
+.user-pill {
+  padding: 4px 12px;
+  background: rgba(91,143,255,0.08);
+  border: 1px solid rgba(91,143,255,0.15);
+  border-radius: 100px; color: var(--accent);
+}
+
+.btn-logout {
+  padding: 5px 12px;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.15);
+  border-radius: 8px; color: var(--danger);
+  font-size: 0.75rem; cursor: pointer; font-family: var(--mono);
+  transition: var(--t);
+}
+.btn-logout:hover { background: rgba(248,113,113,0.14); }
+
+.content {
+  max-width: 860px; margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+
+/* ── Section titles ── */
+.section-title {
+  font-size: 0.7rem; font-weight: 700;
+  color: var(--muted); letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 14px; margin-top: 32px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono);
+}
+.section-title::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.section-title:first-child { margin-top: 0; }
+
+/* ── Settings cards ── */
+.settings-grid {
+  display: grid; gap: 10px;
+}
+
+.setting-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex; align-items: center; gap: 16px;
+  transition: var(--t);
+  position: relative;
+  overflow: hidden;
+}
+
+.setting-card:hover {
+  border-color: var(--border-hi);
+  background: var(--surface2);
+}
+
+.setting-card.saving {
+  border-color: rgba(91,143,255,0.4);
+}
+
+.setting-icon {
+  width: 40px; height: 40px; min-width: 40px;
+  border-radius: 10px;
+  background: rgba(91,143,255,0.08);
+  border: 1px solid rgba(91,143,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+}
+
+.setting-body { flex: 1; min-width: 0; }
+
+.setting-label {
+  font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 2px;
+}
+
+.setting-desc {
+  font-size: 0.75rem; color: var(--muted); font-family: var(--mono); font-weight: 300;
+}
+
+.setting-control { margin-left: auto; display: flex; align-items: center; }
+
+/* ── Toggle switch ── */
+.toggle {
+  position: relative; width: 48px; height: 26px;
+  cursor: pointer; flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  transition: var(--t);
+}
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--muted);
+  transition: var(--t);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.toggle input:checked ~ .toggle-track {
+  background: rgba(91,143,255,0.25);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(91,143,255,0.25);
+}
+.toggle input:checked ~ .toggle-thumb {
+  transform: translateX(22px);
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(91,143,255,0.6);
+}
+
+/* ── Text / select inputs in cards ── */
+.setting-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text); font-size: 0.85rem;
+  font-family: var(--mono); outline: none;
+  transition: var(--t); min-width: 0; width: 160px;
+}
+.setting-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(91,143,255,0.12);
+}
+.setting-input::placeholder { color: rgba(180,200,255,0.25); }
+
+select.setting-input option {
+  background: var(--ink2); color: var(--text);
+}
+
+.save-btn {
+  padding: 7px 14px;
+  background: rgba(91,143,255,0.12);
+  border: 1px solid rgba(91,143,255,0.25);
+  border-radius: 8px; color: var(--accent);
+  font-size: 0.78rem; font-family: var(--mono);
+  cursor: pointer; transition: var(--t); margin-left: 8px;
+  white-space: nowrap;
+}
+.save-btn:hover { background: rgba(91,143,255,0.22); }
+.save-btn.saving { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Toast ── */
+.toast-wrap {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  z-index: 999; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 12px 22px;
+  border-radius: 100px;
+  font-size: 0.83rem; font-family: var(--mono);
+  white-space: nowrap;
+  animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.toast.success { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); color: var(--success); }
+.toast.error   { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: var(--danger); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Saved indicator on card ── */
+.saved-flash {
+  position: absolute; inset: 0; border-radius: var(--radius);
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.2);
+  pointer-events: none; opacity: 0; transition: opacity 0.5s;
+}
+.saved-flash.show { opacity: 1; }
+
+/* ── Loading skeleton ── */
+.skeleton { animation: skPulse 1.4s ease-in-out infinite; }
+@keyframes skPulse {
+  0%,100% { opacity: 0.4; }
+  50%     { opacity: 0.8; }
+}
+.skel-card {
+  height: 74px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+@media (max-width: 600px) {
+  .topbar { padding: 12px 16px; }
+  .content { padding: 24px 16px 80px; }
+  .setting-input { width: 120px; }
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="bg-mesh"></div>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-grid"></div>
+</div>
+
+<div class="app">
+
+  <!-- ════ LOGIN SCREEN ════ -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-badge">⚙️ Settings Panel</div>
+      <h1 class="login-title">Bot Settings</h1>
+      <p class="login-sub">Enter your credentials from WhatsApp</p>
+
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="tel" id="loginPhone" placeholder="94712345678" autocomplete="off" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>One-Time Login Key</label>
+        <input type="text" id="loginKey" placeholder="Paste key from WhatsApp..." autocomplete="off" spellcheck="false">
+      </div>
+
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">
+        <span id="loginBtnIcon">🔓</span>
+        <span id="loginBtnText">Access Settings</span>
+      </button>
+
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+
+  <!-- ════ MAIN PANEL ════ -->
+  <div id="mainPanel">
+    <div class="topbar">
+      <span class="topbar-logo">⚡ SASA MD</span>
+      <span class="topbar-badge">Settings Panel</span>
+      <div class="topbar-user">
+        <span class="user-pill" id="topbarPhone">—</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="content" id="settingsContent">
+      <!-- Loaded by JS -->
+      <div id="skeleton">
+        <div class="section-title">Loading Settings</div>
+        <div class="settings-grid">
+          <div class="skel-card skeleton"></div>
+          <div class="skel-card skeleton"></div>
+          <div class="skel-card skeleton"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  SASA MD Settings Panel — Frontend
+// ════════════════════════════════════════════════
+
+let SESSION = null;
+
+// ── Helpers ──────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function toast(msg, type = 'success', ms = 2800) {
+  const wrap = $('toastWrap');
+  const el   = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-session-token': SESSION,
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res  = await fetch(path, opts);
+  return res.json();
+}
+
+// ── Auth ──────────────────────────────────────────
+async function doLogin() {
+  const phone = $('loginPhone').value.trim().replace(/[^0-9]/g,'');
+  const key   = $('loginKey').value.trim();
+  const err   = $('loginError');
+  const btn   = $('loginBtn');
+
+  if (!phone || !key) {
+    err.textContent = '❌ Enter your phone number and login key.';
+    err.className   = 'login-error show';
+    return;
+  }
+
+  btn.disabled = true;
+  $('loginBtnText').textContent = 'Verifying...';
+  $('loginBtnIcon').textContent = '⏳';
+  err.className = 'login-error';
+
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, key, page: 'settings' }),
+  }).then(r => r.json()).catch(() => ({ ok: false, error: 'Network error.' }));
+
+  if (!res.ok) {
+    err.textContent = '❌ ' + res.error;
+    err.className   = 'login-error show';
+    btn.disabled    = false;
+    $('loginBtnText').textContent = 'Try Again';
+    $('loginBtnIcon').textContent = '🔓';
+    return;
+  }
+
+  SESSION = res.sessionToken;
+  sessionStorage.setItem('sasa_settings_session', SESSION);
+  $('topbarPhone').textContent = '📱 ' + res.phone;
+  $('loginScreen').style.display = 'none';
+  $('mainPanel').style.display   = 'block';
+  await loadSettings();
+}
+
+function logout() {
+  SESSION = null;
+  sessionStorage.removeItem('sasa_settings_session');
+  $('loginScreen').style.display = 'flex';
+  $('mainPanel').style.display   = 'none';
+  $('loginKey').value = '';
+}
+
+// ── Load settings ─────────────────────────────────
+async function loadSettings() {
+  const res = await api('GET', '/api/settings').catch(() => null);
+  if (!res?.ok) return toast('Failed to load settings', 'error');
+
+  const s   = res.settings;
+  const box = $('settingsContent');
+  box.innerHTML = buildUI(s);
+}
+
+// ── Build UI ──────────────────────────────────────
+function buildUI(s) {
+  const sections = [
+    {
+      title: '🌐 Bot Mode & Prefix',
+      items: [
+        { icon: '⌨️', key: 'prefix',  label: 'Command Prefix',     desc: 'Character used before commands (default: .)', type: 'text', val: s.prefix },
+        { icon: '🌍', key: 'mode',    label: 'Bot Mode',            desc: 'Who can use the bot', type: 'select', val: s.mode, options: ['public','private','group'] },
+        { icon: '⏱️', key: 'cooldownSeconds', label: 'Cooldown (seconds)', desc: 'Delay between commands per user', type: 'number', val: s.cooldownSeconds },
+      ],
+    },
+    {
+      title: '⚡ Auto Features',
+      items: [
+        { icon: '👁️', key: 'autoRead',      label: 'Auto Read',      desc: 'Automatically mark messages as read',    type: 'toggle', val: s.autoRead },
+        { icon: '✍️', key: 'autoTyping',    label: 'Auto Typing',    desc: 'Show typing indicator on commands',      type: 'toggle', val: s.autoTyping },
+        { icon: '🎙️', key: 'autoRecording', label: 'Auto Recording', desc: 'Show recording status for media commands', type: 'toggle', val: s.autoRecording },
+        { icon: '🏆', key: 'levelAnnounce', label: 'Level Announce', desc: 'Announce when someone levels up in group', type: 'toggle', val: s.levelAnnounce },
+      ],
+    },
+    {
+      title: '⚡ React System',
+      items: [
+        { icon: '💬', key: 'reactEnabled', label: 'Auto React',    desc: 'Emoji reaction when bot processes a command', type: 'toggle', val: s.reactEnabled },
+        { icon: '😊', key: 'reactEmoji',   label: 'Default Emoji', desc: 'Fallback emoji if no category match', type: 'text', val: s.reactEmoji || '⚡' },
+        { icon: '⏳', key: 'reactDelay',   label: 'React Delay (ms)', desc: 'Milliseconds before reacting', type: 'number', val: s.reactDelay || 800 },
+      ],
+    },
+    {
+      title: '🛡️ Protection',
+      items: [
+        { icon: '🗑️', key: 'antiDelete',   label: 'Anti Delete',    desc: 'Re-send deleted messages',     type: 'toggle', val: s.antiDelete },
+        { icon: '👁️', key: 'antiViewOnce', label: 'Anti View Once', desc: 'Reveal one-time view messages', type: 'toggle', val: s.antiViewOnce },
+        { icon: '🔗', key: 'antiLink',     label: 'Anti Link',      desc: 'Remove & kick link senders in groups', type: 'toggle', val: s.antiLink },
+        { icon: '🚫', key: 'antiSpam',     label: 'Anti Spam',      desc: 'Drop messages from spammers', type: 'toggle', val: s.antiSpam },
+      ],
+    },
+    {
+      title: '👋 Welcome & Goodbye',
+      items: [
+        { icon: '🙋', key: 'welcomeMsg', label: 'Welcome Message', desc: 'Use {user} and {group} as placeholders', type: 'textarea', val: s.welcomeMsg || '' },
+        { icon: '👋', key: 'goodbyeMsg', label: 'Goodbye Message', desc: 'Use {user} as placeholder', type: 'textarea', val: s.goodbyeMsg || '' },
+      ],
+    },
+  ];
+
+  let html = '';
+  for (const section of sections) {
+    html += `<div class="section-title">${section.title}</div>`;
+    html += `<div class="settings-grid">`;
+    for (const item of section.items) {
+      html += buildCard(item);
+    }
+    html += `</div>`;
+  }
+  return html;
+}
+
+function buildCard({ icon, key, label, desc, type, val, options }) {
+  let control = '';
+  if (type === 'toggle') {
+    const chk = val ? 'checked' : '';
+    control = `
+      <label class="toggle" title="${label}">
+        <input type="checkbox" ${chk} onchange="saveSetting('${key}', this.checked, this.closest('.setting-card'))">
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>`;
+  } else if (type === 'select') {
+    const opts = (options || []).map(o => `<option value="${o}" ${val===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('');
+    control = `
+      <select class="setting-input" onchange="saveSetting('${key}', this.value, this.closest('.setting-card'))">
+        ${opts}
+      </select>`;
+  } else if (type === 'textarea') {
+    control = `
+      <div style="display:flex;gap:8px;align-items:center;width:100%;max-width:340px">
+        <input type="text" class="setting-input" style="flex:1" value="${escHtml(val)}" placeholder="Enter message..." data-key="${key}">
+        <button class="save-btn" onclick="saveInput('${key}', this)">Save</button>
+      </div>`;
+  } else {
+    control = `
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="${type==='number'?'number':'text'}" class="setting-input" value="${escHtml(String(val))}" placeholder="${label}" data-key="${key}" style="width:120px" ${type==='number'?'min="0"':''}>
+        <button class="save-btn" onclick="saveInput('${key}', this)">Save</button>
+      </div>`;
+  }
+
+  return `
+    <div class="setting-card" id="card-${key}">
+      <div class="saved-flash" id="flash-${key}"></div>
+      <div class="setting-icon">${icon}</div>
+      <div class="setting-body">
+        <div class="setting-label">${label}</div>
+        <div class="setting-desc">${desc}</div>
+      </div>
+      <div class="setting-control">${control}</div>
+    </div>`;
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Save helpers ──────────────────────────────────
+async function saveSetting(key, value, card) {
+  card?.classList.add('saving');
+  const res = await api('POST', '/api/settings/update', { key, value })
+    .catch(() => ({ ok: false, error: 'Network error' }));
+  card?.classList.remove('saving');
+
+  if (res.ok) {
+    flashCard(key);
+    toast(`✅ ${key} updated`, 'success');
+  } else {
+    toast(`❌ ${res.error}`, 'error');
+  }
+}
+
+async function saveInput(key, btn) {
+  const card  = btn.closest('.setting-card');
+  const input = card.querySelector(`[data-key="${key}"]`);
+  if (!input) return;
+  btn.textContent = '...'; btn.disabled = true;
+  await saveSetting(key, input.value, card);
+  btn.textContent = 'Save'; btn.disabled = false;
+}
+
+function flashCard(key) {
+  const flash = $(`flash-${key}`);
+  if (!flash) return;
+  flash.classList.add('show');
+  setTimeout(() => flash.classList.remove('show'), 1200);
+}
+
+// ── Resume session ────────────────────────────────
+(async () => {
+  const stored = sessionStorage.getItem('sasa_settings_session');
+  if (stored) {
+    SESSION = stored;
+    const res = await api('GET', '/api/settings').catch(() => null);
+    if (res?.ok) {
+      $('loginScreen').style.display = 'none';
+      $('mainPanel').style.display   = 'block';
+      $('topbarPhone').textContent   = '🔐 Authenticated';
+      const s = res.settings;
+      $('settingsContent').innerHTML = buildUI(s);
+    } else {
+      SESSION = null;
+      sessionStorage.removeItem('sasa_settings_session');
+    }
+  }
+  $('loginKey').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+})();
+</script>
+</body>
+</html>

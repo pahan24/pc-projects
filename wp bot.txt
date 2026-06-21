@@ -1,0 +1,267 @@
+Create a complete production-ready WhatsApp Bot using Node.js and the latest Baileys library.
+
+Requirements:
+
+00.MENU DESIGN
+
+ Every menu must use premium styling.
+
+ Example:
+
+ 🌍⃝⃘̉̉̉━⋆─⋆──❂
+ ┊ ┊ ┊ ┊ ┊
+ ┊ ┊ ✫ ˚㋛ ⋆｡ ❀
+ ┊ ☠︎︎
+ ✧ USER NAME
+ ╰────────────────❂
+
+ 🏠 MAIN MENU
+
+ OWNER: PAHAN
+ VERSION: 5.2.0
+ PREFIX: .
+ ACTIVE BOTS: LIVE
+
+ Reply Number:
+
+ 1 OWNER MENU
+ 2 SOCIAL MENU
+ 3 AI MENU
+ 4 GROUP MENU
+ 5 TOOLS MENU
+ 6 EDUCATION MENU
+ 7 CHANNEL MENU
+
+ Powered by PAHAN
+
+1. Authentication
+- Use Pair Code login system.
+- Generate pairing code from phone number.
+- Also support QR code login.
+- Save sessions automatically.
+- Auto reconnect when disconnected.
+- Handle connection errors gracefully.
+
+2. Web Panel
+Create a modern responsive web dashboard using HTML, CSS, JavaScript and Express.
+
+Dashboard Features:
+- Bot Status (Online/Offline)
+- Connected Number
+- Total Messages
+- Total Users
+- Commands List
+- Start/Stop Bot
+- Restart Bot
+- Session Management
+- Logs Viewer
+- Dark Mode UI
+- Mobile Responsive
+
+3. Bot Commands
+
+General Commands:
+
+/menu
+/help
+/ping
+/status
+/about
+/time
+/date
+/uptime
+
+Fun Commands:
+
+/joke
+/fact
+/quote
+/roast
+/truth
+/dare
+
+Group Commands:
+
+/tagall
+/hidetag
+/groupinfo
+/admins
+/kick
+/add
+/promote
+/demote
+/mute
+/unmute
+
+Owner Commands:
+
+/broadcast
+/restart
+/privacy
+/setting
+/getdp
+/csong
+/setsudo
+/delsudo
+/setcall
+/delcall
+/ban
+/unban
+
+Social Commands:
+
+/shortlink
+/qr
+/sticker
+/toimg
+/weather
+/news
+/song
+/video
+/fb
+/tiktok
+/insta
+/twitter
+/movie
+/apk
+/img
+
+AI Commands:
+
+/ai
+/chat
+/ask
+/translate
+/summarize
+/explain
+/code
+/fixcode
+
+4. Auto Responses
+
+If user says:
+hello → Reply "Hello 👋"
+hi → Reply "Hi there 😊"
+good morning → Reply "Good Morning ☀️"
+thanks → Reply "You're welcome ❤️"
+
+Allow editing auto replies from dashboard.
+
+5. Database
+
+Use JSON database.
+
+Store:
+- Users
+- Groups
+- Settings
+- Commands Usage
+- Banned Users
+- Admin Settings
+
+6. Security
+
+- Owner only commands.
+- Rate limiting.
+- Anti spam system.
+- Session protection.
+- Input validation.
+
+7. File Structure
+
+project/
+├── index.js
+├── package.json
+├── config.js
+├── commands/
+├── database/
+├── sessions/
+├── public/
+├── views/
+├── routes/
+├── utils/
+└── logs/
+
+8. API Endpoints
+
+GET /status
+GET /users
+GET /groups
+GET /commands
+POST /broadcast
+POST /restart
+
+9. Dashboard Design
+
+Use:
+- Glassmorphism
+- Modern cards
+- Animations
+- Dark theme
+- Mobile responsive layout
+
+10. Startup
+
+When running:
+
+npm install
+npm start
+
+The system must:
+- Start Express server
+- Open dashboard
+- Generate Pair Code page
+- Generate QR page
+- Connect WhatsApp automatically
+
+11. Pair Code Page
+
+Create page:
+
+/pair
+
+Features:
+- Enter phone number
+- Generate Pair Code
+- Show connection status
+- Show success message
+
+12. QR Page
+
+Create page:
+
+/qr
+
+Features:
+- Display QR Code
+- Auto refresh
+- Connection status
+
+13. Additional Features
+
+- Welcome messages
+- Goodbye messages
+- Anti link system
+- Anti bad words
+- Auto reactions
+- Command statistics
+- User leveling system
+- Custom prefixes
+- Scheduled messages
+
+14. Error Handling
+
+Create complete error handling.
+No crashes.
+Automatic recovery.
+
+15. Output
+
+Generate ALL source code files completely.
+Do not use placeholders.
+Write full production-ready code.
+Generate package.json, server.js, dashboard files, routes, commands, styles, scripts and configuration files.
+
+Make the project fully functional and ready to run on Replit immediately.
+
+https://1f559e79-a7d7-41e0-b606-e00624e312cd-00-3ew8yanxs976i.sisko.replit.dev/

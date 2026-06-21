@@ -1,0 +1,37 @@
+{
+  "name": "sasa-md",
+  "version": "2.0.0",
+  "description": "SASA MD - Advanced WhatsApp Multi Device Bot",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "pair": "node pair-site/server.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0",
+    "chalk": "^5.3.0",
+    "moment": "^2.30.1",
+    "pino": "^9.1.0",
+    "pino-pretty": "^11.0.0",
+    "node-fetch": "^3.3.2",
+    "qrcode": "^1.5.4",
+    "express": "^4.19.2",
+    "jimp": "^0.22.12",
+    "fluent-ffmpeg": "^2.1.2",
+    "ytdl-core": "^4.11.5",
+    "yt-search": "^2.12.0",
+    "node-cache": "^5.1.2",
+    "dotenv": "^16.4.5",
+    "sharp": "^0.33.4",
+    "socket.io": "^4.7.5",
+    "bcryptjs": "^2.4.3",
+    "fs-extra": "^11.2.0"
+  },
+  "engines": { "node": ">=18.0.0" },
+  "author": "PAHAN",
+  "license": "MIT"
+}

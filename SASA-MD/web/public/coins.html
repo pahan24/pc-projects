@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASA MD — Coin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #060a10;
+  --bg2:     #0a1018;
+  --gold:    #f5c842;
+  --gold2:   #ff9f43;
+  --teal:    #26c6da;
+  --green:   #2ecc71;
+  --red:     #e74c3c;
+  --surface: rgba(255,255,255,0.04);
+  --border:  rgba(245,200,66,0.1);
+  --border2: rgba(245,200,66,0.22);
+  --text:    #f0e8cc;
+  --muted:   rgba(220,200,140,0.45);
+  --mono:    'Space Mono', monospace;
+  --sans:    'DM Sans', sans-serif;
+  --r:       14px;
+  --t:       all 0.22s ease;
+}
+
+body {
+  font-family: var(--sans); background: var(--bg); color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Background ── */
+.bg {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+}
+.bg-stars {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(245,200,66,0.35) 0, transparent 0),
+    radial-gradient(1px 1px at 60% 15%, rgba(255,255,255,0.2) 0, transparent 0),
+    radial-gradient(1.5px 1.5px at 80% 60%, rgba(245,200,66,0.25) 0, transparent 0),
+    radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.15) 0, transparent 0),
+    radial-gradient(1px 1px at 45% 75%, rgba(245,200,66,0.2) 0, transparent 0),
+    radial-gradient(1px 1px at 90% 25%, rgba(255,255,255,0.12) 0, transparent 0),
+    radial-gradient(1px 1px at 35% 50%, rgba(255,159,67,0.2) 0, transparent 0);
+}
+.bg-glow {
+  position: absolute; border-radius: 50%; filter: blur(120px);
+}
+.bg-glow-1 { width: 500px; height: 300px; background: rgba(245,200,66,0.04); top: -80px; left: 50%; transform: translateX(-50%); }
+.bg-glow-2 { width: 300px; height: 300px; background: rgba(38,198,218,0.04); bottom: 10%; right: 5%; }
+.bg-hex {
+  position: absolute; inset: 0; opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='52' viewBox='0 0 60 52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 0 L45 0 L60 26 L45 52 L15 52 L0 26Z' fill='none' stroke='%23f5c842' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 60px 52px;
+}
+
+/* ── App ── */
+.app { position: relative; z-index: 1; }
+
+/* ── LOGIN ── */
+#loginScreen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.login-card {
+  width: 100%; max-width: 400px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border2);
+  border-radius: 20px; padding: 44px 36px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.8), 0 0 60px rgba(245,200,66,0.04), inset 0 1px 0 rgba(245,200,66,0.08);
+}
+.login-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold) 40%, var(--gold2) 60%, transparent);
+}
+
+.login-coin {
+  font-size: 3rem; text-align: center; margin-bottom: 14px;
+  animation: coinSpin 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(245,200,66,0.4));
+}
+@keyframes coinSpin {
+  0%,100% { transform: rotateY(0deg); }
+  50% { transform: rotateY(180deg); }
+}
+
+.login-title {
+  font-size: 1.6rem; font-weight: 700; text-align: center;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 4px;
+}
+.login-sub {
+  text-align: center; font-size: 0.8rem; color: var(--muted);
+  font-family: var(--mono); margin-bottom: 32px;
+}
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 0.7rem; color: var(--muted);
+  margin-bottom: 7px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--mono);
+}
+.field input {
+  width: 100%; padding: 13px 16px;
+  background: rgba(245,200,66,0.04);
+  border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 0.88rem;
+  font-family: var(--mono); outline: none; transition: var(--t);
+}
+.field input:focus {
+  border-color: var(--gold);
+  background: rgba(245,200,66,0.07);
+  box-shadow: 0 0 0 3px rgba(245,200,66,0.08);
+}
+.field input::placeholder { color: rgba(220,200,140,0.2); }
+
+.btn-login {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border: none; border-radius: 10px;
+  color: #1a0a00; font-size: 0.92rem; font-weight: 700;
+  font-family: var(--sans); cursor: pointer;
+  transition: var(--t); letter-spacing: 0.04em;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,200,66,0.35); }
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.login-error {
+  margin-top: 12px; padding: 11px 14px;
+  background: rgba(231,76,60,0.08);
+  border: 1px solid rgba(231,76,60,0.2);
+  border-radius: 8px; color: var(--red);
+  font-size: 0.8rem; display: none;
+  font-family: var(--mono);
+  animation: shake 0.35s ease;
+}
+.login-error.show { display: block; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* ── MAIN PANEL ── */
+#mainPanel { display: none; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(6,10,16,0.85); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 32px;
+  display: flex; align-items: center; gap: 12px;
+}
+.topbar-logo {
+  font-size: 1.1rem; font-weight: 700; letter-spacing: 0.04em;
+  background: linear-gradient(90deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.topbar-right {
+  margin-left: auto; display: flex; gap: 10px; align-items: center;
+}
+.phone-pill {
+  font-family: var(--mono); font-size: 0.75rem;
+  padding: 4px 12px;
+  background: rgba(245,200,66,0.08);
+  border: 1px solid rgba(245,200,66,0.15);
+  border-radius: 100px; color: var(--gold);
+}
+.btn-logout {
+  font-family: var(--mono); font-size: 0.72rem; padding: 5px 12px;
+  background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.15);
+  border-radius: 8px; color: var(--red); cursor: pointer; transition: var(--t);
+}
+.btn-logout:hover { background: rgba(231,76,60,0.15); }
+
+.content {
+  max-width: 860px; margin: 0 auto;
+  padding: 32px 24px 80px;
+  display: grid; gap: 16px;
+}
+
+/* ── Balance card ── */
+.balance-card {
+  background: linear-gradient(135deg, rgba(245,200,66,0.08) 0%, rgba(255,159,67,0.06) 100%);
+  border: 1px solid var(--border2);
+  border-radius: 20px; padding: 32px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 0 60px rgba(245,200,66,0.05);
+}
+.balance-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+}
+.balance-card::after {
+  content: '💰';
+  position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  font-size: 5rem; opacity: 0.06;
+}
+.balance-label {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px;
+}
+.balance-amount {
+  font-size: 3.2rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; line-height: 1;
+  filter: drop-shadow(0 0 20px rgba(245,200,66,0.3));
+}
+.balance-unit { font-size: 1rem; opacity: 0.6; margin-left: 4px; }
+.balance-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 16px; }
+.balance-meta {
+  display: flex; gap: 20px; flex-wrap: wrap;
+}
+.balance-stat {
+  font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+}
+.balance-stat span { color: var(--text); font-weight: 700; }
+
+/* ── XP / Level card ── */
+.xp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r); padding: 22px;
+}
+.xp-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.xp-level {
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--gold);
+  font-family: var(--mono);
+}
+.xp-count {
+  font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+}
+.xp-bar-wrap {
+  height: 8px; background: rgba(245,200,66,0.08);
+  border: 1px solid rgba(245,200,66,0.1);
+  border-radius: 100px; overflow: hidden;
+}
+.xp-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold2));
+  border-radius: 100px;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 10px rgba(245,200,66,0.4);
+}
+.xp-footer {
+  display: flex; justify-content: space-between; margin-top: 8px;
+  font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+}
+
+/* ── Two-col grid ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 580px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* ── Action cards ── */
+.action-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r); padding: 22px;
+}
+.action-title {
+  font-size: 0.9rem; font-weight: 700; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.action-desc {
+  font-size: 0.78rem; color: var(--muted);
+  font-family: var(--mono); margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* ── Daily button ── */
+.btn-daily {
+  width: 100%; padding: 13px;
+  border-radius: 10px; border: none; cursor: pointer;
+  font-size: 0.88rem; font-weight: 700;
+  font-family: var(--sans); transition: var(--t);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-daily.ready {
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #1a0a00;
+  box-shadow: 0 4px 20px rgba(245,200,66,0.25);
+}
+.btn-daily.ready:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,200,66,0.35); }
+.btn-daily.waiting {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  color: var(--muted); cursor: not-allowed;
+}
+
+.daily-timer {
+  text-align: center; margin-top: 10px;
+  font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+}
+
+/* ── Transfer form ── */
+.tf-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.tf-input {
+  flex: 1; padding: 11px 14px;
+  background: rgba(245,200,66,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text);
+  font-family: var(--mono); font-size: 0.83rem;
+  outline: none; transition: var(--t);
+}
+.tf-input:focus {
+  border-color: var(--gold);
+  background: rgba(245,200,66,0.07);
+}
+.tf-input::placeholder { color: rgba(220,200,140,0.2); }
+.btn-transfer {
+  width: 100%; padding: 12px;
+  border-radius: 8px; border: 1px solid var(--border2);
+  background: rgba(245,200,66,0.08);
+  color: var(--gold); font-weight: 700;
+  font-family: var(--sans); cursor: pointer; transition: var(--t);
+}
+.btn-transfer:hover { background: rgba(245,200,66,0.14); transform: translateY(-1px); }
+
+.tf-result {
+  margin-top: 10px; padding: 10px 14px; border-radius: 8px;
+  font-family: var(--mono); font-size: 0.8rem; display: none;
+}
+.tf-result.ok  { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); color: var(--green); display: block; }
+.tf-result.err { background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.2); color: var(--red); display: block; }
+
+/* ── Leaderboard ── */
+.lb-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r); padding: 22px;
+}
+.lb-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 14px; }
+.lb-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(245,200,66,0.06);
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-rank {
+  width: 28px; text-align: center;
+  font-family: var(--mono); font-size: 0.85rem;
+  color: var(--muted); font-weight: 700;
+}
+.lb-rank.gold   { color: #ffd700; }
+.lb-rank.silver { color: #c0c0c0; }
+.lb-rank.bronze { color: #cd7f32; }
+.lb-phone { font-family: var(--mono); font-size: 0.8rem; flex: 1; color: var(--muted); }
+.lb-phone.me { color: var(--gold); }
+.lb-coins {
+  font-family: var(--mono); font-size: 0.85rem; font-weight: 700;
+  color: var(--gold);
+}
+
+/* ── Transaction history ── */
+.txn-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r); padding: 22px;
+}
+.txn-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(245,200,66,0.05);
+}
+.txn-item:last-child { border-bottom: none; }
+.txn-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.txn-dot.positive { background: var(--green); box-shadow: 0 0 8px rgba(46,204,113,0.5); }
+.txn-dot.negative { background: var(--red); box-shadow: 0 0 8px rgba(231,76,60,0.5); }
+.txn-reason { font-size: 0.82rem; flex: 1; }
+.txn-amount { font-family: var(--mono); font-size: 0.85rem; font-weight: 700; }
+.txn-amount.pos { color: var(--green); }
+.txn-amount.neg { color: var(--red); }
+.txn-time { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); display: block; margin-top: 2px; }
+
+/* ── Toast ── */
+.toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999; }
+.toast {
+  padding: 11px 22px; border-radius: 100px;
+  font-size: 0.82rem; font-family: var(--mono);
+  animation: toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+}
+.toast.success { background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.3); color: var(--green); }
+.toast.error   { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.3); color: var(--red); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.section-title {
+  font-size: 0.68rem; color: var(--muted); letter-spacing: 0.12em;
+  text-transform: uppercase; font-family: var(--mono);
+  display: flex; align-items: center; gap: 10px; padding: 0 2px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="bg-stars"></div>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-hex"></div>
+</div>
+
+<div class="app">
+
+  <!-- ════ LOGIN ════ -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-coin">🪙</div>
+      <h1 class="login-title">Coin Panel</h1>
+      <p class="login-sub">Access your SASA MD wallet</p>
+
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="tel" id="loginPhone" placeholder="94712345678" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>One-Time Login Key</label>
+        <input type="text" id="loginKey" placeholder="Paste key from WhatsApp..." spellcheck="false">
+      </div>
+
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">
+        <span id="loginBtnIcon">🔓</span>
+        <span id="loginBtnText">Open Wallet</span>
+      </button>
+
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+
+  <!-- ════ MAIN PANEL ════ -->
+  <div id="mainPanel">
+    <div class="topbar">
+      <span class="topbar-logo">🪙 SASA MD Coins</span>
+      <div class="topbar-right">
+        <span class="phone-pill" id="topbarPhone">—</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="content" id="coinContent">
+      <div style="text-align:center;padding:60px;color:var(--muted);font-family:var(--mono)">
+        Loading wallet data...
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  SASA MD Coin Panel — Frontend
+// ════════════════════════════════════════════════
+
+let SESSION = null;
+let DATA    = null;
+
+const $ = id => document.getElementById(id);
+
+function toast(msg, type = 'success', ms = 2800) {
+  const wrap = $('toastWrap');
+  const el   = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'x-session-token': SESSION },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(path, opts).then(r => r.json());
+}
+
+// ── Auth ──────────────────────────────────────────
+async function doLogin() {
+  const phone = $('loginPhone').value.trim().replace(/[^0-9]/g, '');
+  const key   = $('loginKey').value.trim();
+  const err   = $('loginError');
+  const btn   = $('loginBtn');
+
+  if (!phone || !key) {
+    err.textContent = '❌ Both fields are required.';
+    err.className = 'login-error show'; return;
+  }
+
+  btn.disabled = true;
+  $('loginBtnText').textContent = 'Verifying...';
+  $('loginBtnIcon').textContent = '⏳';
+  err.className = 'login-error';
+
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, key, page: 'coins' }),
+  }).then(r => r.json()).catch(() => ({ ok: false, error: 'Network error.' }));
+
+  if (!res.ok) {
+    err.textContent = '❌ ' + res.error;
+    err.className = 'login-error show';
+    btn.disabled = false;
+    $('loginBtnText').textContent = 'Try Again';
+    $('loginBtnIcon').textContent = '🔓';
+    return;
+  }
+
+  SESSION = res.sessionToken;
+  sessionStorage.setItem('sasa_coins_session', SESSION);
+  $('topbarPhone').textContent = '📱 ' + res.phone;
+  $('loginScreen').style.display = 'none';
+  $('mainPanel').style.display   = 'block';
+  await loadCoinData();
+}
+
+function logout() {
+  SESSION = null;
+  sessionStorage.removeItem('sasa_coins_session');
+  $('loginScreen').style.display = 'flex';
+  $('mainPanel').style.display   = 'none';
+  $('loginKey').value = '';
+}
+
+// ── Load data ─────────────────────────────────────
+async function loadCoinData() {
+  const res = await api('GET', '/api/coins').catch(() => null);
+  if (!res?.ok) { toast('Failed to load wallet data', 'error'); return; }
+  DATA = res;
+  renderPanel(DATA);
+}
+
+// ── Render ────────────────────────────────────────
+function renderPanel(d) {
+  const rankLabel = d.rank ? `#${d.rank} on leaderboard` : 'Not ranked yet';
+  const medals    = ['🥇','🥈','🥉'];
+  const myPhone   = sessionStorage.getItem('sasa_coins_phone') || '—';
+
+  // Build leaderboard
+  const lbHTML = (d.leaderboard || []).map((u, i) => {
+    const cls  = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const isMe = u.num === d.phone;
+    return `
+      <div class="lb-row">
+        <div class="lb-rank ${cls}">${medals[i] || i+1}</div>
+        <div class="lb-phone ${isMe?'me':''}">${u.num.slice(0,6)}••••${isMe?' (you)':''}</div>
+        <div class="lb-coins">${u.balance.toLocaleString()} 🪙</div>
+      </div>`;
+  }).join('');
+
+  // Build transactions
+  const txnHTML = (d.recentTxns || []).length === 0
+    ? `<div style="color:var(--muted);font-family:var(--mono);font-size:0.8rem;padding:12px 0">No transactions yet.</div>`
+    : (d.recentTxns || []).map(tx => {
+        const pos = tx.amount > 0;
+        const time = new Date(tx.time).toLocaleString();
+        return `
+          <div class="txn-item">
+            <div class="txn-dot ${pos?'positive':'negative'}"></div>
+            <div>
+              <div class="txn-reason">${tx.reason}</div>
+              <span class="txn-time">${time}</span>
+            </div>
+            <div class="txn-amount ${pos?'pos':'neg'}">${pos?'+':''}${tx.amount} 🪙</div>
+          </div>`;
+      }).join('');
+
+  const dailyBtn = d.dailyReady
+    ? `<button class="btn-daily ready" id="dailyBtn" onclick="claimDaily()">🎁 Claim 5 Coins</button>`
+    : `<button class="btn-daily waiting" disabled>⏳ Already Claimed</button>
+       <div class="daily-timer">Next claim in: <strong>${d.nextDailyIn}</strong></div>`;
+
+  $('coinContent').innerHTML = `
+    <!-- Balance -->
+    <div class="balance-card">
+      <div class="balance-label">Your Balance</div>
+      <div class="balance-row">
+        <div class="balance-amount">${d.balance.toLocaleString()}<span class="balance-unit">coins</span></div>
+      </div>
+      <div class="balance-meta">
+        <div class="balance-stat">🏆 Rank: <span>${rankLabel}</span></div>
+        <div class="balance-stat">💬 Messages: <span>${(d.msgCount||0).toLocaleString()}</span></div>
+      </div>
+    </div>
+
+    <!-- XP / Level -->
+    <div class="xp-card">
+      <div class="xp-header">
+        <div class="xp-level">Level ${d.level}</div>
+        <div class="xp-count">${d.xp} / ${d.xpForNext} XP</div>
+      </div>
+      <div class="xp-bar-wrap">
+        <div class="xp-bar" id="xpBar" style="width:${d.xpProgress}%"></div>
+      </div>
+      <div class="xp-footer">
+        <span>Level ${d.level}</span>
+        <span>${d.xpProgress}%</span>
+        <span>Level ${d.level + 1}</span>
+      </div>
+    </div>
+
+    <!-- Daily + Transfer -->
+    <div class="grid2">
+      <div class="action-card">
+        <div class="action-title">🎁 Daily Reward</div>
+        <div class="action-desc">Claim 5 free coins every 24 hours. Keep your streak going!</div>
+        ${dailyBtn}
+      </div>
+      <div class="action-card">
+        <div class="action-title">💸 Transfer Coins</div>
+        <div class="action-desc">Send coins to another user by their phone number.</div>
+        <div class="tf-row">
+          <input type="tel" class="tf-input" id="tfPhone" placeholder="94712345678" inputmode="numeric">
+        </div>
+        <div class="tf-row">
+          <input type="number" class="tf-input" id="tfAmount" placeholder="Amount..." min="1">
+        </div>
+        <button class="btn-transfer" onclick="doTransfer()">🚀 Send Coins</button>
+        <div class="tf-result" id="tfResult"></div>
+      </div>
+    </div>
+
+    <!-- Leaderboard + Transactions -->
+    <div class="grid2">
+      <div class="lb-card">
+        <div class="lb-title">🏆 Top 5 Richest</div>
+        ${lbHTML || '<div style="color:var(--muted);font-family:var(--mono);font-size:0.8rem">No data yet.</div>'}
+      </div>
+      <div class="txn-card">
+        <div class="lb-title">📜 Recent Transactions</div>
+        ${txnHTML}
+      </div>
+    </div>
+  `;
+}
+
+// ── Actions ───────────────────────────────────────
+async function claimDaily() {
+  const btn = $('dailyBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Claiming...'; }
+
+  const res = await api('POST', '/api/coins/daily').catch(() => ({ ok: false, error: 'Network error' }));
+  if (res.ok) {
+    toast(`🎁 Claimed +5 coins! Balance: ${res.newBalance}`, 'success');
+    await loadCoinData();
+  } else {
+    toast('❌ ' + res.error, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '🎁 Claim 5 Coins'; }
+  }
+}
+
+async function doTransfer() {
+  const to     = $('tfPhone').value.trim().replace(/[^0-9]/g,'');
+  const amount = parseInt($('tfAmount').value);
+  const result = $('tfResult');
+  result.className = 'tf-result';
+
+  if (!to || !amount) { result.textContent = '❌ Enter recipient and amount.'; result.className='tf-result err'; return; }
+
+  const res = await api('POST', '/api/coins/transfer', { to, amount }).catch(()=>({ok:false,error:'Network error'}));
+
+  if (res.ok) {
+    result.textContent = `✅ Sent ${res.sent} coins to ${res.to}. Balance: ${res.newBalance}`;
+    result.className   = 'tf-result ok';
+    $('tfPhone').value = '';
+    $('tfAmount').value = '';
+    setTimeout(loadCoinData, 1000);
+  } else {
+    result.textContent = '❌ ' + res.error;
+    result.className   = 'tf-result err';
+  }
+}
+
+// ── Session restore ───────────────────────────────
+(async () => {
+  const stored = sessionStorage.getItem('sasa_coins_session');
+  if (stored) {
+    SESSION = stored;
+    const res = await api('GET', '/api/coins').catch(() => null);
+    if (res?.ok) {
+      $('loginScreen').style.display = 'none';
+      $('mainPanel').style.display   = 'block';
+      $('topbarPhone').textContent   = '📱 ' + res.phone;
+      DATA = res; renderPanel(DATA);
+    } else {
+      SESSION = null; sessionStorage.removeItem('sasa_coins_session');
+    }
+  }
+  $('loginKey').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+})();
+</script>
+</body>
+</html>

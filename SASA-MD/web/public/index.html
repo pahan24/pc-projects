@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASA MD v9.0.0 — Admin Panel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+<style>
+/* ════════════════════════════════════════════════
+   SASA MD — Neon Dark Glass UI
+════════════════════════════════════════════════ */
+:root {
+  --neon-green: #00ff99;
+  --neon-blue:  #00d4ff;
+  --neon-purple:#b44fff;
+  --neon-pink:  #ff44cc;
+  --dark-bg:    #080c10;
+  --glass-bg:   rgba(0,255,153,0.05);
+  --glass-border: rgba(0,255,153,0.15);
+  --text:       #e0ffe8;
+  --text-dim:   #6a9a7a;
+  --card-bg:    rgba(10,20,15,0.85);
+  --danger:     #ff4466;
+  --success:    #00ff99;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { height:100%; font-family:'Segoe UI',sans-serif; background:var(--dark-bg); color:var(--text); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:#0d0d0d; }
+::-webkit-scrollbar-thumb { background:var(--neon-green); border-radius:3px; }
+
+/* ── Background grid ── */
+body::before {
+  content:''; position:fixed; inset:0; z-index:0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(0,255,153,0.06) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(0,212,255,0.04) 0%, transparent 60%),
+              repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,255,153,0.02) 40px, rgba(0,255,153,0.02) 41px),
+              repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,255,153,0.02) 40px, rgba(0,255,153,0.02) 41px);
+}
+
+/* ── Layout ── */
+#app { position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; }
+
+/* ── Navbar ── */
+nav {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 28px;
+  background:rgba(0,10,8,0.9);
+  border-bottom:1px solid var(--glass-border);
+  backdrop-filter:blur(20px);
+  position:sticky; top:0; z-index:100;
+}
+.nav-brand {
+  font-size:1.4rem; font-weight:800; letter-spacing:2px;
+  background:linear-gradient(90deg, var(--neon-green), var(--neon-blue));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.nav-links { display:flex; gap:8px; }
+.nav-btn {
+  padding:6px 18px; border-radius:20px; cursor:pointer; border:none;
+  background:transparent; color:var(--text-dim); font-size:0.88rem;
+  transition:all 0.2s; letter-spacing:1px; text-transform:uppercase;
+}
+.nav-btn:hover, .nav-btn.active {
+  background:var(--glass-bg); color:var(--neon-green);
+  border:1px solid var(--glass-border);
+}
+.status-dot {
+  width:10px; height:10px; border-radius:50%; display:inline-block;
+  margin-right:6px;
+}
+.status-dot.online  { background:var(--neon-green); box-shadow:0 0 8px var(--neon-green); animation:pulse 2s infinite; }
+.status-dot.offline { background:var(--danger); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Main Content ── */
+main { flex:1; padding:28px; max-width:1400px; margin:0 auto; width:100%; }
+
+/* ── Pages ── */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── Cards ── */
+.card {
+  background:var(--card-bg);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:24px;
+  backdrop-filter:blur(20px);
+  margin-bottom:20px;
+}
+.card-title {
+  font-size:1.1rem; font-weight:700; margin-bottom:16px;
+  color:var(--neon-green); text-transform:uppercase; letter-spacing:2px;
+  display:flex; align-items:center; gap:8px;
+}
+
+/* ── Grid ── */
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+@media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.grid-4,.grid-2{grid-template-columns:1fr}}
+
+/* ── Stat cards ── */
+.stat-card {
+  background:var(--card-bg);
+  border:1px solid var(--glass-border);
+  border-radius:14px;
+  padding:20px;
+  text-align:center;
+}
+.stat-number { font-size:2.2rem; font-weight:900; color:var(--neon-green); }
+.stat-label  { font-size:0.8rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+
+/* ── Forms ── */
+.form-group { margin-bottom:16px; }
+label { display:block; margin-bottom:6px; color:var(--text-dim); font-size:0.85rem; letter-spacing:1px; }
+input, select, textarea {
+  width:100%; padding:12px 16px; border-radius:10px;
+  background:rgba(0,255,153,0.05);
+  border:1px solid var(--glass-border);
+  color:var(--text); font-size:0.95rem;
+  transition:border-color 0.2s;
+  outline:none;
+}
+input:focus, select:focus, textarea:focus { border-color:var(--neon-green); }
+select option { background:#0a1a0f; }
+
+/* ── Buttons ── */
+.btn {
+  padding:12px 24px; border-radius:10px; cursor:pointer;
+  border:none; font-size:0.9rem; font-weight:700;
+  transition:all 0.2s; letter-spacing:1px;
+}
+.btn-primary {
+  background:linear-gradient(135deg, var(--neon-green), #00cc77);
+  color:#000;
+}
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,255,153,0.3); }
+.btn-danger  { background:var(--danger); color:#fff; }
+.btn-danger:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(255,68,102,0.3); }
+.btn-outline {
+  background:transparent; color:var(--neon-green);
+  border:1px solid var(--neon-green);
+}
+.btn-outline:hover { background:rgba(0,255,153,0.1); }
+.btn-sm { padding:6px 14px; font-size:0.8rem; }
+.btn-full { width:100%; }
+
+/* ── Toggle Switch ── */
+.toggle-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.toggle-label { font-size:0.9rem; }
+.toggle-switch { position:relative; width:48px; height:26px; }
+.toggle-switch input { opacity:0; width:0; height:0; }
+.toggle-slider {
+  position:absolute; cursor:pointer; inset:0;
+  background:#1a2a1f; border-radius:26px; transition:.3s;
+}
+.toggle-slider:before {
+  content:""; position:absolute;
+  width:20px; height:20px; left:3px; bottom:3px;
+  background:#fff; border-radius:50%; transition:.3s;
+}
+input:checked + .toggle-slider { background:var(--neon-green); }
+input:checked + .toggle-slider:before { transform:translateX(22px); background:#000; }
+
+/* ── QR Code ── */
+#qr-img { max-width:280px; border-radius:12px; border:2px solid var(--neon-green); }
+.pair-center { max-width:500px; margin:0 auto; text-align:center; }
+.pair-code-display {
+  font-size:2.5rem; letter-spacing:8px; font-weight:900;
+  color:var(--neon-green); background:rgba(0,255,153,0.07);
+  border:1px solid var(--glass-border); border-radius:12px;
+  padding:20px; margin:16px 0;
+}
+
+/* ── Table ── */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+th { padding:10px 14px; text-align:left; background:rgba(0,255,153,0.08); color:var(--neon-green); letter-spacing:1px; }
+td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.04); color:var(--text-dim); }
+tr:hover td { background:rgba(0,255,153,0.03); color:var(--text); }
+
+/* ── Toast ── */
+.toast {
+  position:fixed; bottom:24px; right:24px; z-index:9999;
+  padding:14px 24px; border-radius:10px;
+  background:rgba(0,255,153,0.15); border:1px solid var(--neon-green);
+  color:var(--text); font-size:0.9rem;
+  transform:translateY(100px); opacity:0;
+  transition:all 0.3s;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.error { background:rgba(255,68,102,0.15); border-color:var(--danger); }
+
+/* ── Login page ── */
+.login-wrap {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:var(--dark-bg);
+}
+.login-card {
+  background:var(--card-bg); border:1px solid var(--glass-border);
+  border-radius:20px; padding:40px; width:360px;
+  backdrop-filter:blur(30px);
+}
+.login-title {
+  text-align:center; margin-bottom:28px;
+  font-size:1.8rem; font-weight:900;
+  background:linear-gradient(90deg, var(--neon-green), var(--neon-blue));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.login-sub { text-align:center; color:var(--text-dim); margin-bottom:24px; font-size:0.85rem; }
+
+/* ── Responsive ── */
+@media(max-width:600px){
+  nav{padding:12px 16px}
+  main{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div id="login-wrap" class="login-wrap">
+  <div class="login-card">
+    <div class="login-title">🤖 SASA MD</div>
+    <div class="login-sub">Enter bot password to continue</div>
+    <div class="form-group">
+      <label>PASSWORD</label>
+      <input type="password" id="login-pw" placeholder="Enter password..." onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">LOGIN</button>
+    <div id="login-err" style="color:var(--danger);text-align:center;margin-top:12px;font-size:0.85rem"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <!-- Navbar -->
+  <nav>
+    <div class="nav-brand">🤖 SASA MD</div>
+    <div class="nav-links">
+      <button class="nav-btn active" onclick="showPage('pair',this)">📡 Pair</button>
+      <button class="nav-btn" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+      <button class="nav-btn" onclick="showPage('economy',this)">🪙 Economy</button>
+      <button class="nav-btn" onclick="showPage('users',this)">👥 Users</button>
+    </div>
+    <div>
+      <span class="status-dot offline" id="nav-dot"></span>
+      <span id="nav-status" style="font-size:0.8rem;color:var(--text-dim)">Offline</span>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ══ PAIR PAGE ══════════════════════════════════════════ -->
+    <div class="page active" id="page-pair">
+      <div class="pair-center">
+        <div class="card">
+          <div class="card-title">📡 Connect Bot</div>
+          <div style="margin-bottom:20px;text-align:center">
+            <div id="pair-status" style="color:var(--text-dim);margin-bottom:16px">Checking status...</div>
+            <div id="qr-container">
+              <img id="qr-img" src="" alt="QR Code" style="display:none">
+              <div id="qr-placeholder" style="width:280px;height:280px;border:2px dashed var(--glass-border);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto;color:var(--text-dim)">
+                ⏳ Waiting for QR...
+              </div>
+            </div>
+            <div style="margin-top:16px;color:var(--text-dim);font-size:0.85rem">
+              OR use Pair Code below
+            </div>
+          </div>
+
+          <!-- Pair Code -->
+          <div class="form-group">
+            <label>PHONE NUMBER (with country code)</label>
+            <input type="tel" id="pair-phone" placeholder="+94771234567">
+          </div>
+          <button class="btn btn-primary btn-full" onclick="requestPairCode()">Generate Pair Code</button>
+          <div id="pair-code-display" class="pair-code-display" style="display:none"></div>
+          <div id="pair-code-hint" style="display:none;color:var(--text-dim);font-size:0.82rem;margin-top:8px">
+            Go to WhatsApp → Linked Devices → Link with phone number → Enter code above
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DASHBOARD ══════════════════════════════════════════ -->
+    <div class="page" id="page-dashboard">
+      <!-- Stats row -->
+      <div class="grid-4" style="margin-bottom:20px">
+        <div class="stat-card"><div class="stat-number" id="stat-users">—</div><div class="stat-label">Total Users</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-coins">—</div><div class="stat-label">Total Coins</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-uptime">—</div><div class="stat-label">Uptime</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-mode">—</div><div class="stat-label">Mode</div></div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Settings -->
+        <div class="card">
+          <div class="card-title">⚙️ Bot Settings</div>
+          <div class="toggle-row">
+            <span class="toggle-label">🌐 Public Mode</span>
+            <label class="toggle-switch"><input type="checkbox" id="tog-mode" onchange="toggleSetting('mode',this.checked?'public':'private')"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">🔗 Anti-Link</span>
+            <label class="toggle-switch"><input type="checkbox" id="tog-antilink" onchange="toggleSetting('antiLink',this.checked)"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">🚫 Anti-Badword</span>
+            <label class="toggle-switch"><input type="checkbox" id="tog-antibadword" onchange="toggleSetting('antiBadword',this.checked)"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">👁️ Auto Read</span>
+            <label class="toggle-switch"><input type="checkbox" id="tog-autoread" onchange="toggleSetting('autoRead',this.checked)"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">✍️ Auto Typing</span>
+            <label class="toggle-switch"><input type="checkbox" id="tog-autotyping" onchange="toggleSetting('autoTyping',this.checked)"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">👋 Welcome Messages</span>
+            <label class="toggle-switch"><input type="checkbox" id="tog-welcome" onchange="toggleSetting('welcome',this.checked)"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">🚪 Goodbye Messages</span>
+            <label class="toggle-switch"><input type="checkbox" id="tog-goodbye" onchange="toggleSetting('goodbye',this.checked)"><span class="toggle-slider"></span></label>
+          </div>
+
+          <div style="margin-top:16px">
+            <label>PREFIX</label>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="prefix-input" value="." style="max-width:80px">
+              <button class="btn btn-outline btn-sm" onclick="savePrefix()">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div>
+          <div class="card">
+            <div class="card-title">🎛️ Actions</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="btn btn-danger" onclick="restartBot()">🔄 Restart Bot</button>
+              <button class="btn btn-outline" onclick="showPage('broadcast',null)">📣 Broadcast Message</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📦 React Packages</div>
+            <div id="react-pkgs-list"></div>
+            <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="openAddPack()">➕ Add Package</button>
+            <!-- Add pack form -->
+            <div id="add-pack-form" style="display:none;margin-top:16px">
+              <div class="grid-2">
+                <div class="form-group"><label>ID</label><input id="np-id" placeholder="mypack"></div>
+                <div class="form-group"><label>Name</label><input id="np-name" placeholder="My Pack"></div>
+                <div class="form-group"><label>Price (coins)</label><input id="np-price" type="number" value="20"></div>
+                <div class="form-group"><label>Count/msg</label><input id="np-count" type="number" value="2"></div>
+                <div class="form-group"><label>Interval (s)</label><input id="np-interval" type="number" step="0.1" value="1"></div>
+                <div class="form-group"><label>Emojis</label><input id="np-emojis" placeholder="🔥💥⚡"></div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="saveNewPack()">Save Pack</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ECONOMY ════════════════════════════════════════════ -->
+    <div class="page" id="page-economy">
+      <div class="card">
+        <div class="card-title">🪙 Economy Overview</div>
+        <div class="grid-4" style="margin-bottom:20px">
+          <div class="stat-card"><div class="stat-number" id="eco-total">—</div><div class="stat-label">Total Coins</div></div>
+          <div class="stat-card"><div class="stat-number" id="eco-users">—</div><div class="stat-label">Users w/ Coins</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💰 Coin Leaderboard</div>
+        <div class="table-wrap">
+          <table id="coin-table">
+            <thead><tr><th>#</th><th>JID</th><th>Balance</th><th>Last Daily</th></tr></thead>
+            <tbody id="coin-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ USERS ══════════════════════════════════════════════ -->
+    <div class="page" id="page-users">
+      <div class="card">
+        <div class="card-title">👥 User Management</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>JID</th><th>Level</th><th>XP</th><th>Messages</th><th>Coins</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  SASA MD Admin Panel JS
+// ════════════════════════════════════════════════
+
+let token = localStorage.getItem('sasa_token');
+let socket;
+
+// ── Init ────────────────────────────────────────
+window.onload = async () => {
+  if (token) {
+    const ok = await verifyToken();
+    if (ok) initApp();
+    else showLogin();
+  } else {
+    showLogin();
+  }
+};
+
+function showLogin() {
+  document.getElementById('login-wrap').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+function initApp() {
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('app').style.display='flex';
+  initSocket();
+  loadSettings();
+  loadDashboardStats();
+  loadQR();
+}
+
+// ── Auth ────────────────────────────────────────
+async function doLogin() {
+  const pw = document.getElementById('login-pw').value;
+  const err = document.getElementById('login-err');
+  if (!pw) { err.textContent='Enter password'; return; }
+
+  const res = await apiFetch('/api/auth/login', 'POST', { password: pw }, false);
+  if (res.token) {
+    token = res.token;
+    localStorage.setItem('sasa_token', token);
+    err.textContent = '';
+    initApp();
+  } else {
+    err.textContent = res.error || 'Login failed';
+  }
+}
+
+async function verifyToken() {
+  const res = await apiFetch('/api/auth/verify');
+  return res.valid;
+}
+
+// ── Socket.IO ───────────────────────────────────
+function initSocket() {
+  socket = io();
+  socket.on('qr', updateQR);
+  socket.on('connected', (jid) => {
+    updateStatus(true, jid);
+  });
+  socket.on('stats', (data) => {
+    document.getElementById('stat-users').textContent  = data.totalUsers || 0;
+    document.getElementById('stat-coins').textContent  = data.totalCoins || 0;
+    document.getElementById('stat-uptime').textContent = formatUptime(data.uptime);
+    document.getElementById('stat-mode').textContent   = (data.mode||'public').toUpperCase();
+    if (data.connected) updateStatus(true, data.botJid);
+    else updateStatus(false);
+  });
+}
+
+function updateStatus(online, jid='') {
+  const dot    = document.getElementById('nav-dot');
+  const status = document.getElementById('nav-status');
+  if (online) {
+    dot.className    = 'status-dot online';
+    status.textContent = jid ? jid.split('@')[0] : 'Online';
+    document.getElementById('pair-status').textContent = '✅ Bot is connected: ' + (jid||'');
+    document.getElementById('pair-status').style.color = 'var(--neon-green)';
+  } else {
+    dot.className    = 'status-dot offline';
+    status.textContent = 'Offline';
+  }
+}
+
+// ── Page nav ────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+id)?.classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  // lazy-load data
+  if (id === 'economy') loadEconomy();
+  if (id === 'users')   loadUsers();
+  if (id === 'pair')    loadQR();
+}
+
+// ── QR ──────────────────────────────────────────
+async function loadQR() {
+  const res = await apiFetch('/api/pair/qr');
+  if (res.qr) updateQR(res.qr.split(',')[1] || res.qr, true);
+  else if (res.status === 'connected') updateStatus(true, res.message);
+}
+
+function updateQR(qrData, isBase64=false) {
+  const img = document.getElementById('qr-img');
+  const ph  = document.getElementById('qr-placeholder');
+  if (!qrData) { ph.style.display='flex'; img.style.display='none'; return; }
+  img.src = isBase64 ? 'data:image/png;base64,'+qrData : 'data:image/png;base64,'+qrData;
+  img.style.display = 'block';
+  ph.style.display  = 'none';
+  document.getElementById('pair-status').textContent = '📱 Scan with WhatsApp to connect';
+}
+
+async function requestPairCode() {
+  const phone = document.getElementById('pair-phone').value.replace(/\s/g,'');
+  if (!phone) { showToast('Enter phone number','error'); return; }
+  const res = await apiFetch('/api/pair/code','POST',{ phone }, false);
+  if (res.code) {
+    document.getElementById('pair-code-display').textContent = res.code;
+    document.getElementById('pair-code-display').style.display = 'block';
+    document.getElementById('pair-code-hint').style.display = 'block';
+  } else {
+    showToast(res.error || 'Failed', 'error');
+  }
+}
+
+// ── Settings ────────────────────────────────────
+async function loadSettings() {
+  const s = await apiFetch('/api/settings');
+  if (!s || s.error) return;
+  document.getElementById('tog-mode').checked        = s.mode === 'public';
+  document.getElementById('tog-antilink').checked    = !!s.antiLink;
+  document.getElementById('tog-antibadword').checked = !!s.antiBadword;
+  document.getElementById('tog-autoread').checked    = !!s.autoRead;
+  document.getElementById('tog-autotyping').checked  = !!s.autoTyping;
+  document.getElementById('tog-welcome').checked     = !!s.welcome;
+  document.getElementById('tog-goodbye').checked     = !!s.goodbye;
+  document.getElementById('prefix-input').value      = s.prefix || '.';
+  loadReactPacks();
+}
+
+async function toggleSetting(key, val) {
+  const res = await apiFetch('/api/settings','POST',{ key, value: val });
+  showToast(res.error ? '❌ '+res.error : `✅ ${key} updated`);
+}
+
+async function savePrefix() {
+  const val = document.getElementById('prefix-input').value;
+  if (!val) return;
+  await toggleSetting('prefix', val);
+}
+
+// ── React Packages ───────────────────────────────
+async function loadReactPacks() {
+  const pkgs = await apiFetch('/api/react-packages');
+  const el   = document.getElementById('react-pkgs-list');
+  if (!el || !pkgs || pkgs.error) return;
+  el.innerHTML = Object.entries(pkgs).map(([id,p]) =>
+    `<div class="toggle-row">
+      <span>${p.emojis?.slice(0,3).join('')||''} <b>${p.name}</b> — 🪙${p.price}</span>
+      <button class="btn btn-danger btn-sm" onclick="deletePack('${id}')">✕</button>
+    </div>`
+  ).join('');
+}
+
+function openAddPack() {
+  const f = document.getElementById('add-pack-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveNewPack() {
+  const pack = {
+    id:       document.getElementById('np-id').value,
+    name:     document.getElementById('np-name').value,
+    price:    document.getElementById('np-price').value,
+    count:    document.getElementById('np-count').value,
+    interval: document.getElementById('np-interval').value,
+    emojis:   [...document.getElementById('np-emojis').value],
+  };
+  const res = await apiFetch('/api/react-packages','POST',pack);
+  if (res.success) { showToast('✅ Pack saved!'); loadReactPacks(); document.getElementById('add-pack-form').style.display='none'; }
+  else showToast('❌ '+res.error,'error');
+}
+
+async function deletePack(id) {
+  if (!confirm('Delete pack '+id+'?')) return;
+  const res = await apiFetch('/api/react-packages/'+id,'DELETE');
+  if (res.success) { showToast('✅ Deleted'); loadReactPacks(); }
+}
+
+// ── Dashboard ───────────────────────────────────
+async function loadDashboardStats() {
+  const stats = await apiFetch('/api/stats');
+  if (!stats || stats.error) return;
+  document.getElementById('stat-users').textContent  = stats.totalUsers;
+  document.getElementById('stat-coins').textContent  = stats.totalCoins;
+  document.getElementById('stat-uptime').textContent = stats.uptime;
+  document.getElementById('stat-mode').textContent   = (stats.mode||'public').toUpperCase();
+}
+
+// ── Economy ─────────────────────────────────────
+async function loadEconomy() {
+  const res = await apiFetch('/api/coins');
+  if (!res || res.error) return;
+  const entries = Object.entries(res.breakdown || {})
+    .sort((a,b) => b[1].balance - a[1].balance);
+  document.getElementById('eco-total').textContent = res.total || 0;
+  document.getElementById('eco-users').textContent = entries.length;
+  const tbody = document.getElementById('coin-tbody');
+  tbody.innerHTML = entries.slice(0,50).map(([jid,data],i) =>
+    `<tr>
+      <td>${i+1}</td>
+      <td>${jid.split('@')[0]}</td>
+      <td>🪙 ${data.balance}</td>
+      <td>${data.lastDaily ? new Date(data.lastDaily).toLocaleDateString() : '—'}</td>
+    </tr>`
+  ).join('');
+}
+
+// ── Users ───────────────────────────────────────
+async function loadUsers() {
+  const res = await apiFetch('/api/users');
+  if (!res || res.error) return;
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = (res.users||[]).map((u,i) =>
+    `<tr>
+      <td>${i+1}</td>
+      <td>${u.jid?.split('@')[0]}</td>
+      <td>⭐ ${u.level}</td>
+      <td>${u.xp}</td>
+      <td>${u.messageCount}</td>
+      <td>🪙 ${u.coins}</td>
+    </tr>`
+  ).join('');
+}
+
+// ── Actions ─────────────────────────────────────
+async function restartBot() {
+  if (!confirm('Restart bot?')) return;
+  await apiFetch('/api/restart','POST');
+  showToast('🔄 Restarting...');
+}
+
+// ── API Helper ──────────────────────────────────
+async function apiFetch(url, method='GET', body=null, auth=true) {
+  try {
+    const opts = {
+      method,
+      headers: { 'Content-Type':'application/json', ...(auth&&token?{'Authorization':'Bearer '+token}:{}) },
+      body: body ? JSON.stringify(body) : undefined,
+    };
+    const res = await fetch(url, opts);
+    return res.json();
+  } catch(e) {
+    return { error: e.message };
+  }
+}
+
+// ── Toast ───────────────────────────────────────
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type?' '+type:'');
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Helpers ─────────────────────────────────────
+function formatUptime(seconds) {
+  if (!seconds) return '—';
+  const h = Math.floor(seconds/3600);
+  const m = Math.floor((seconds%3600)/60);
+  return `${h}h ${m}m`;
+}
+</script>
+</body>
+</html>

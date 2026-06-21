@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASA MD — Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Kanit:wght@300;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050709;--bg2:#090c10;
+  --surface:rgba(0,255,100,0.025);--surface2:rgba(0,255,100,0.05);
+  --border:rgba(0,255,100,0.1);--border-hi:rgba(0,255,100,0.28);
+  --green:#00ff64;--green2:#00d454;
+  --amber:#ffb800;--red:#ff4040;--teal:#00e5ff;
+  --text:#c8ffd0;--muted:rgba(150,230,170,0.4);
+  --mono:'IBM Plex Mono',monospace;--display:'Kanit',sans-serif;
+  --r:4px;--t:all 0.2s ease;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:100vh}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9000;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px)}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,255,100,0.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,100,0.018) 1px,transparent 1px);
+  background-size:32px 32px}
+
+/* ── Auth gate ── */
+#authGate{position:fixed;inset:0;background:var(--bg);z-index:8000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+#authGate.hidden{display:none}
+.gate-spinner{width:36px;height:36px;border:2px solid rgba(0,255,100,0.15);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gate-text{font-size:0.78rem;color:var(--muted);letter-spacing:0.1em}
+
+/* ── Topbar ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(5,7,9,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 28px;height:52px;
+  display:flex;align-items:center;gap:16px;
+}
+.topbar-logo{font-family:var(--display);font-size:1.1rem;font-weight:700;color:var(--green);letter-spacing:0.05em;text-shadow:0 0 20px rgba(0,255,100,0.4)}
+.topbar-tag{font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;opacity:0.7}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.topbar-phone{font-size:0.72rem;padding:3px 10px;background:rgba(0,255,100,0.06);border:1px solid var(--border);border-radius:2px;color:var(--green)}
+.btn-topbar{font-size:0.7rem;padding:4px 10px;border-radius:2px;cursor:pointer;font-family:var(--mono);transition:var(--t);border:1px solid}
+.btn-revoke{background:rgba(255,184,0,0.05);border-color:rgba(255,184,0,0.2);color:var(--amber)}
+.btn-revoke:hover{background:rgba(255,184,0,0.12)}
+.btn-logout{background:rgba(255,60,60,0.05);border-color:rgba(255,60,60,0.2);color:var(--red)}
+.btn-logout:hover{background:rgba(255,60,60,0.1)}
+
+/* ── Layout ── */
+.content{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:28px 20px 80px}
+
+/* ── Section header ── */
+.sec-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:12px;margin-top:28px;
+}
+.sec-header:first-child{margin-top:0}
+.sec-label{font-size:0.65rem;color:var(--muted);letter-spacing:0.18em;text-transform:uppercase}
+.sec-line{flex:1;height:1px;background:var(--border)}
+
+/* ── Setting cards ── */
+.cards{display:grid;gap:8px}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px 20px;
+  display:flex;align-items:center;gap:16px;
+  transition:var(--t);position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--green);opacity:0;transition:opacity 0.3s;
+}
+.card:hover{border-color:var(--border-hi);background:var(--surface2)}
+.card:hover::before{opacity:0.6}
+.card.saved{border-color:rgba(0,255,100,0.3);background:rgba(0,255,100,0.03)}
+.card.saved::before{opacity:1}
+
+.card-icon{
+  width:36px;height:36px;min-width:36px;border-radius:3px;
+  background:rgba(0,255,100,0.05);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:0.95rem;
+}
+
+.card-body{flex:1;min-width:0}
+.card-label{font-size:0.83rem;font-weight:500;color:var(--text);margin-bottom:2px}
+.card-desc{font-size:0.7rem;color:var(--muted);line-height:1.4}
+
+.card-ctrl{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+/* ── Live status dot ── */
+.status-dot{
+  display:flex;align-items:center;gap:6px;
+  font-size:0.7rem;letter-spacing:0.05em;min-width:52px;justify-content:flex-end;
+}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.on{background:var(--green);box-shadow:0 0 8px var(--green);animation:dotPulse 2s infinite}
+.dot.off{background:var(--red);opacity:0.7}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.dot-label.on{color:var(--green)}
+.dot-label.off{color:var(--red);opacity:0.7}
+
+/* ── Toggle ── */
+.toggle{position:relative;width:44px;height:24px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.t-track{
+  position:absolute;inset:0;border-radius:100px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);transition:var(--t);
+}
+.t-thumb{
+  position:absolute;top:3px;left:3px;
+  width:16px;height:16px;border-radius:50%;
+  background:rgba(150,170,150,0.5);
+  transition:var(--t);box-shadow:0 2px 4px rgba(0,0,0,0.5);
+}
+.toggle input:checked~.t-track{background:rgba(0,255,100,0.18);border-color:var(--green);box-shadow:0 0 12px rgba(0,255,100,0.2)}
+.toggle input:checked~.t-thumb{transform:translateX(20px);background:var(--green);box-shadow:0 0 10px rgba(0,255,100,0.7)}
+
+/* ── Text input in card ── */
+.card-input{
+  background:rgba(0,255,100,0.03);border:1px solid var(--border);border-radius:3px;
+  padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:0.83rem;
+  outline:none;transition:var(--t);width:140px;
+}
+.card-input:focus{border-color:var(--green);background:rgba(0,255,100,0.06);box-shadow:0 0 0 2px rgba(0,255,100,0.08)}
+.card-input::placeholder{color:rgba(150,230,170,0.2)}
+.card-input[type=number]{width:90px}
+select.card-input option{background:#0a0f0a;color:var(--text)}
+
+.save-btn{
+  padding:6px 12px;border-radius:3px;cursor:pointer;
+  font-family:var(--mono);font-size:0.72rem;letter-spacing:0.05em;
+  border:1px solid var(--border);background:rgba(0,255,100,0.06);
+  color:var(--green);transition:var(--t);white-space:nowrap;
+}
+.save-btn:hover{background:rgba(0,255,100,0.12);border-color:var(--green)}
+.save-btn.saving{opacity:0.4;cursor:not-allowed}
+
+/* ── Toast ── */
+.toasts{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.toast{
+  padding:9px 20px;border-radius:2px;font-size:0.78rem;font-family:var(--mono);white-space:nowrap;
+  animation:toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);letter-spacing:0.04em;
+}
+.toast.ok{background:rgba(0,255,100,0.1);border:1px solid rgba(0,255,100,0.25);color:var(--green)}
+.toast.err{background:rgba(255,60,60,0.1);border:1px solid rgba(255,60,60,0.25);color:var(--red)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ── Save-all bar ── */
+.save-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(5,7,9,0.95);border-top:1px solid var(--border);
+  padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  backdrop-filter:blur(8px);transform:translateY(100%);transition:transform 0.3s ease;
+}
+.save-bar.visible{transform:translateY(0)}
+.save-bar-text{font-size:0.75rem;color:var(--muted);letter-spacing:0.06em}
+.save-bar-text span{color:var(--amber)}
+.btn-save-all{
+  padding:10px 24px;border-radius:3px;cursor:pointer;
+  font-family:var(--mono);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;
+  border:1px solid var(--green);background:rgba(0,255,100,0.08);color:var(--green);
+  transition:var(--t);
+}
+.btn-save-all:hover{background:rgba(0,255,100,0.16)}
+
+/* ── Confirm modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.show{display:flex}
+.modal{
+  background:var(--bg2);border:1px solid var(--border-hi);border-radius:var(--r);
+  padding:32px;max-width:360px;width:90%;text-align:center;
+  box-shadow:0 0 60px rgba(0,0,0,0.8);
+}
+.modal h3{font-family:var(--display);font-size:1.1rem;color:var(--amber);margin-bottom:8px}
+.modal p{font-size:0.8rem;color:var(--muted);margin-bottom:24px;line-height:1.5}
+.modal-btns{display:flex;gap:10px;justify-content:center}
+.modal-btn{padding:9px 22px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:0.8rem;border:1px solid;transition:var(--t)}
+.modal-btn-cancel{border-color:var(--border);background:transparent;color:var(--muted)}
+.modal-btn-cancel:hover{background:var(--surface2)}
+.modal-btn-confirm{border-color:rgba(255,60,60,0.3);background:rgba(255,60,60,0.08);color:var(--red)}
+.modal-btn-confirm:hover{background:rgba(255,60,60,0.16)}
+
+@media(max-width:580px){
+  .topbar{padding:0 14px}
+  .content{padding:20px 12px 80px}
+  .card{flex-wrap:wrap}
+  .card-ctrl{width:100%;margin-left:0;flex-wrap:wrap}
+  .card-input{width:120px}
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- Auth gate -->
+<div id="authGate">
+  <div class="gate-spinner"></div>
+  <div class="gate-text">VERIFYING SESSION...</div>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display:none">
+  <div class="topbar">
+    <span class="topbar-logo">⚡ SASA MD</span>
+    <span class="topbar-tag">// SETTINGS</span>
+    <div class="topbar-right">
+      <span class="topbar-phone" id="topbarPhone"></span>
+      <button class="btn-topbar btn-revoke" onclick="showRevoke()">REVOKE KEY</button>
+      <button class="btn-topbar btn-logout" onclick="logout()">LOGOUT</button>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+    <!-- Rendered by JS -->
+  </div>
+
+  <!-- Pending saves bar -->
+  <div class="save-bar" id="saveBar">
+    <div class="save-bar-text">You have <span id="pendingCount">0</span> unsaved changes</div>
+    <button class="btn-save-all" onclick="saveAll()">SAVE ALL CHANGES</button>
+  </div>
+</div>
+
+<!-- Revoke confirm modal -->
+<div class="modal-bg" id="revokeModal">
+  <div class="modal">
+    <h3>⚠️ REVOKE LOGIN KEY</h3>
+    <p>This will permanently invalidate your login key. You will be logged out and will need to send <strong>.settings</strong> to the bot to generate a new key.</p>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeRevoke()">Cancel</button>
+      <button class="modal-btn modal-btn-confirm" onclick="doRevoke()">Revoke Key</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  SASA MD Settings Panel
+// ════════════════════════════════════════════════
+let SESSION  = null;
+let SETTINGS = {};
+let PENDING  = {};
+
+const $ = id => document.getElementById(id);
+
+// ── Toast ─────────────────────────────────────────
+function toast(msg, type='ok', ms=2600) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = (type==='ok'?'✓ ':'✗ ') + msg;
+  $('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), ms);
+}
+
+// ── API ───────────────────────────────────────────
+async function api(method, url, body) {
+  const opts = { method, headers:{'Content-Type':'application/json','x-session-token':SESSION} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  return r.json();
+}
+
+// ── Auth ──────────────────────────────────────────
+async function boot() {
+  SESSION = sessionStorage.getItem('sasa_session');
+  if (!SESSION) { window.location.href = '/login'; return; }
+
+  const res = await api('GET', '/api/settings/data').catch(()=>null);
+  if (!res?.ok) { window.location.href = '/login'; return; }
+
+  SETTINGS = res.settings || {};
+  $('topbarPhone').textContent = '📱 ' + res.phone;
+  $('authGate').classList.add('hidden');
+  $('app').style.display = 'block';
+  render();
+}
+
+function logout() {
+  sessionStorage.removeItem('sasa_session');
+  sessionStorage.removeItem('sasa_phone');
+  window.location.href = '/login';
+}
+
+// ── Revoke ────────────────────────────────────────
+function showRevoke() { $('revokeModal').classList.add('show'); }
+function closeRevoke(){ $('revokeModal').classList.remove('show'); }
+async function doRevoke() {
+  const res = await api('POST', '/api/settings/revoke').catch(()=>null);
+  if (res?.ok) { toast('Key revoked. Logging out...','ok'); setTimeout(()=>{ sessionStorage.clear(); window.location.href='/login'; }, 1500); }
+  else toast(res?.error || 'Failed','err');
+  closeRevoke();
+}
+
+// ── Render ────────────────────────────────────────
+function render() {
+  const s = SETTINGS;
+
+  const sections = [
+    { label: '// BOT MODE & PREFIX', items: [
+      { icon:'⌨️', key:'prefix',  label:'Command Prefix', desc:'Symbol used before commands (default: .)', type:'text',   val:s.prefix||'.', size:60 },
+      { icon:'🌍', key:'mode',    label:'Bot Mode',       desc:'Who can use the bot', type:'select', val:s.mode||'public', opts:['public','private','group'] },
+      { icon:'⏱️', key:'cooldownSeconds', label:'Cooldown', desc:'Seconds between commands per user', type:'number', val:s.cooldownSeconds??3, min:0, max:300 },
+    ]},
+    { label: '// AUTO FEATURES', items: [
+      { icon:'👁️', key:'autoRead',     label:'Auto Read',      desc:'Mark messages as read automatically', type:'toggle', val:!!s.autoRead },
+      { icon:'✍️', key:'autoTyping',   label:'Auto Typing',    desc:'Show typing indicator on commands',   type:'toggle', val:!!s.autoTyping },
+      { icon:'🎙️', key:'autoRecording',label:'Auto Recording', desc:'Recording indicator for media cmds',  type:'toggle', val:!!s.autoRecording },
+    ]},
+    { label: '// REACT SYSTEM', items: [
+      { icon:'⚡', key:'reactEnabled', label:'Auto React',   desc:'React with emoji on each command', type:'toggle', val:!!s.reactEnabled },
+      { icon:'😊', key:'reactEmoji',   label:'React Emoji',  desc:'Default reaction emoji',           type:'text',   val:s.reactEmoji||'⚡', size:50 },
+      { icon:'⏳', key:'reactDelay',   label:'React Delay',  desc:'Milliseconds before reacting',     type:'number', val:s.reactDelay??800, min:0, max:10000 },
+    ]},
+    { label: '// PROTECTION', items: [
+      { icon:'🗑️', key:'antiDelete',  label:'Anti Delete',   desc:'Re-share messages that are deleted', type:'toggle', val:!!s.antiDelete },
+      { icon:'🔗', key:'antiLink',    label:'Anti Link',     desc:'Remove users who send links in groups', type:'toggle', val:!!s.antiLink },
+      { icon:'🚫', key:'antiSpam',    label:'Anti Spam',     desc:'Drop flood/spam messages', type:'toggle', val:!!s.antiSpam },
+      { icon:'👁️', key:'antiViewOnce',label:'Anti View Once',desc:'Reveal one-time view messages', type:'toggle', val:!!s.antiViewOnce },
+    ]},
+    { label: '// GROUP EVENTS', items: [
+      { icon:'👋', key:'welcomeEnabled', label:'Welcome',  desc:'Send welcome message when someone joins', type:'toggle', val:!!s.welcomeEnabled },
+      { icon:'🚪', key:'goodbyeEnabled', label:'Goodbye',  desc:'Send goodbye message when someone leaves', type:'toggle', val:!!s.goodbyeEnabled },
+      { icon:'💬', key:'welcomeMsg',     label:'Welcome Message', desc:'{user} and {group} as placeholders', type:'text', val:s.welcomeMsg||'', size:280, full:true },
+      { icon:'💬', key:'goodbyeMsg',     label:'Goodbye Message', desc:'{user} as placeholder', type:'text', val:s.goodbyeMsg||'', size:280, full:true },
+    ]},
+    { label: '// LEVELS & ANNOUNCE', items: [
+      { icon:'🏆', key:'levelAnnounce', label:'Level Up Announce', desc:'Announce level-ups in groups', type:'toggle', val:!!s.levelAnnounce },
+    ]},
+  ];
+
+  let html = '';
+  for (const sec of sections) {
+    html += `<div class="sec-header"><span class="sec-label">${sec.label}</span><div class="sec-line"></div></div>`;
+    html += '<div class="cards">';
+    for (const item of sec.items) html += buildCard(item);
+    html += '</div>';
+  }
+  $('content').innerHTML = html;
+}
+
+function buildCard({icon,key,label,desc,type,val,opts,size,min,max,full}) {
+  let ctrl = '';
+
+  if (type === 'toggle') {
+    const on  = !!val;
+    const chk = on ? 'checked' : '';
+    ctrl = `
+      <div class="status-dot" id="dot-${key}">
+        <span class="dot-label ${on?'on':'off'}" id="dlabel-${key}">${on?'ON':'OFF'}</span>
+        <div class="dot ${on?'on':'off'}" id="dind-${key}"></div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${chk} onchange="onToggle('${key}',this.checked)">
+        <div class="t-track"></div>
+        <div class="t-thumb"></div>
+      </label>`;
+
+  } else if (type === 'select') {
+    const options = (opts||[]).map(o=>`<option value="${o}" ${val===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('');
+    ctrl = `<select class="card-input" style="width:120px" onchange="markPending('${key}',this.value)" id="input-${key}">${options}</select>
+            <button class="save-btn" onclick="saveOne('${key}')">SAVE</button>`;
+
+  } else if (type === 'number') {
+    ctrl = `<input type="number" class="card-input" id="input-${key}" value="${val}" min="${min??0}" max="${max??9999}" style="width:80px" onchange="markPending('${key}',this.value)">
+            <button class="save-btn" onclick="saveOne('${key}')">SAVE</button>`;
+
+  } else {
+    // text
+    const w = full ? '100%' : `${size||120}px`;
+    ctrl = `<input type="text" class="card-input" id="input-${key}" value="${esc(String(val))}" style="width:${w}" placeholder="${label}" oninput="markPending('${key}',this.value)">
+            <button class="save-btn" onclick="saveOne('${key}')">SAVE</button>`;
+  }
+
+  const ctrlWrap = full
+    ? `<div style="flex-basis:100%;margin-top:10px;display:flex;gap:10px;align-items:center">${ctrl}</div>`
+    : `<div class="card-ctrl">${ctrl}</div>`;
+
+  return `
+    <div class="card" id="card-${key}">
+      <div class="card-icon">${icon}</div>
+      <div class="card-body">
+        <div class="card-label">${label}</div>
+        <div class="card-desc">${desc}</div>
+      </div>
+      ${full?'':ctrlWrap}
+      ${full?ctrlWrap:''}
+    </div>`;
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Interactions ──────────────────────────────────
+async function onToggle(key, value) {
+  const res = await api('POST','/api/settings/update',{key,value}).catch(()=>null);
+  if (res?.ok) {
+    SETTINGS[key] = value;
+    updateDot(key, value);
+    flashCard(key);
+    toast(`${key}: ${value?'ON':'OFF'}`,'ok');
+  } else {
+    toast(res?.error||'Update failed','err');
+    // revert checkbox visually
+    render();
+  }
+}
+
+function updateDot(key, val) {
+  const label = $(`dlabel-${key}`); const ind = $(`dind-${key}`);
+  if (!label||!ind) return;
+  label.textContent = val?'ON':'OFF';
+  label.className   = `dot-label ${val?'on':'off'}`;
+  ind.className     = `dot ${val?'on':'off'}`;
+}
+
+function markPending(key, value) {
+  PENDING[key] = value;
+  const count = Object.keys(PENDING).length;
+  $('pendingCount').textContent = count;
+  $('saveBar').classList.toggle('visible', count > 0);
+}
+
+async function saveOne(key) {
+  const input = $(`input-${key}`);
+  if (!input) return;
+  const btn = input.closest('.card').querySelector('.save-btn');
+  if (btn) { btn.textContent='...'; btn.classList.add('saving'); }
+  const res = await api('POST','/api/settings/update',{key,value:input.value}).catch(()=>null);
+  if (btn) { btn.textContent='SAVE'; btn.classList.remove('saving'); }
+  if (res?.ok) {
+    SETTINGS[key] = res.value;
+    delete PENDING[key];
+    updatePendingBar();
+    flashCard(key);
+    toast(`Saved: ${key}`,'ok');
+  } else {
+    toast(res?.error||'Failed','err');
+  }
+}
+
+async function saveAll() {
+  if (!Object.keys(PENDING).length) return;
+  const res = await api('POST','/api/settings/update-bulk',{updates:PENDING}).catch(()=>null);
+  if (res?.ok) {
+    Object.assign(SETTINGS, PENDING);
+    PENDING = {};
+    updatePendingBar();
+    toast('All changes saved!','ok');
+    // Update all inputs
+    for (const [key] of Object.entries(SETTINGS)) flashCard(key);
+  } else {
+    toast((res?.errors||[res?.error]).join(', ')||'Failed','err');
+  }
+}
+
+function updatePendingBar() {
+  const count = Object.keys(PENDING).length;
+  $('pendingCount').textContent = count;
+  $('saveBar').classList.toggle('visible', count > 0);
+}
+
+function flashCard(key) {
+  const card = $(`card-${key}`);
+  if (!card) return;
+  card.classList.add('saved');
+  setTimeout(()=>card.classList.remove('saved'), 1800);
+}
+
+// ── Boot ──────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>

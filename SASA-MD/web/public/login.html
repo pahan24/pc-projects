@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SASA MD — Login</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-box  { width: 100%; max-width: 420px; }
+    .login-logo { text-align: center; margin-bottom: 32px; }
+    .login-logo .logo-text { font-size: 2.5rem; font-weight: 900; color: var(--neon); text-shadow: 0 0 40px var(--neon); }
+    .login-logo .sub { color: var(--text2); margin-top: 8px; }
+  </style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-text">⚡ SASA MD</div>
+      <div class="sub">Admin Panel v9.0.0</div>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--neon);margin-bottom:24px;text-align:center">🔐 Login</h3>
+      <div class="form-group">
+        <label>Bot Number / Username</label>
+        <input type="text" id="bot-number" placeholder="94712345678 or admin">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')login()">
+      </div>
+      <button class="btn btn-primary" onclick="login()" style="width:100%" id="login-btn">
+        🚀 Login
+      </button>
+      <p style="text-align:center;margin-top:16px;color:var(--text2);font-size:.85rem">
+        <a href="/pair" style="color:var(--neon);text-decoration:none">← Back to Pair</a>
+      </p>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="/js/common.js"></script>
+<script>
+if (localStorage.getItem('sasa_token')) window.location.href = '/dashboard';
+async function login() {
+  const botNumber = document.getElementById('bot-number').value.trim();
+  const password  = document.getElementById('password').value;
+  if (!botNumber || !password) return toast('Fill all fields', 'error');
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = '⏳ Logging in...';
+  try {
+    const res  = await fetch('/api/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ botNumber, password })
+    });
+    const data = await res.json();
+    if (data.token) {
+      localStorage.setItem('sasa_token', data.token);
+      toast('Login successful!', 'success');
+      setTimeout(() => window.location.href = '/dashboard', 800);
+    } else {
+      toast(data.error || 'Invalid credentials', 'error');
+    }
+  } catch(e) { toast(e.message, 'error'); }
+  btn.disabled = false; btn.innerHTML = '🚀 Login';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SASA MD — Pair Device</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav>
+  <span class="nav-brand">⚡ SASA MD</span>
+  <div class="nav-links">
+    <a href="/pair" class="active">Pair</a>
+    <a href="/login">Dashboard</a>
+  </div>
+</nav>
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">📱 Connect Your Device</div>
+    <div class="page-sub">Pair via QR code or phone number</div>
+  </div>
+  <div class="row">
+    <!-- QR Section -->
+    <div class="col">
+      <div class="card">
+        <h3 style="color:var(--neon);margin-bottom:16px;">📷 QR Code</h3>
+        <div class="qr-wrapper" id="qr-section">
+          <div class="spinner" id="qr-spinner"></div>
+          <img id="qr-img" src="" alt="QR Code" style="display:none">
+          <p id="qr-status" style="color:var(--text2);font-size:.9rem">Waiting for QR...</p>
+        </div>
+        <button class="btn btn-ghost" onclick="loadStatus()" style="width:100%;margin-top:12px">🔄 Refresh</button>
+      </div>
+    </div>
+    <!-- Pair Code Section -->
+    <div class="col">
+      <div class="card">
+        <h3 style="color:var(--neon);margin-bottom:16px;">📲 Phone Pair Code</h3>
+        <div class="form-group">
+          <label>Phone Number (with country code)</label>
+          <input type="tel" id="phone-input" placeholder="+94712345678">
+        </div>
+        <button class="btn btn-primary" onclick="getPairCode()" style="width:100%" id="pair-btn">
+          ⚡ Generate Pair Code
+        </button>
+        <div id="pair-result" style="margin-top:20px;display:none">
+          <p style="color:var(--text2);font-size:.85rem;margin-bottom:10px;">Enter this code on your WhatsApp:</p>
+          <div class="pair-code" id="pair-code-display"></div>
+          <p style="color:var(--text2);font-size:.8rem;margin-top:10px;text-align:center">Expires in 60 seconds</p>
+        </div>
+      </div>
+      <!-- Bot Status Card -->
+      <div class="card" id="status-card">
+        <h3 style="color:var(--neon);margin-bottom:16px;">🤖 Bot Status</h3>
+        <div id="status-info" style="color:var(--text2)">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="/js/common.js"></script>
+<script>
+async function loadStatus() {
+  try {
+    const res = await fetch('/api/status', { headers: { Authorization: 'Bearer ' + (localStorage.getItem('sasa_token') || '') } });
+    const data = await res.json();
+    document.getElementById('status-info').innerHTML = `
+      <div class="toggle-wrap">
+        <span>Status</span>
+        <span class="badge ${data.online ? 'badge-online' : 'badge-offline'}">${data.online ? '🟢 Online' : '🔴 Offline'}</span>
+      </div>
+      <div class="toggle-wrap"><span>Bot Name</span><span>${data.botName || 'SASA MD'}</span></div>
+      <div class="toggle-wrap"><span>Version</span><span>v${data.version || '9.0.0'}</span></div>
+      <div class="toggle-wrap"><span>Mode</span><span>${data.mode || '-'}</span></div>
+    `;
+    // Show QR if available
+    if (data.qrCode) {
+      const QRCode = window.QRCode;
+      document.getElementById('qr-spinner').style.display = 'none';
+      const img = document.getElementById('qr-img');
+      img.src = data.qrCode;
+      img.style.display = 'block';
+      document.getElementById('qr-status').textContent = 'Scan with WhatsApp';
+    } else if (data.online) {
+      document.getElementById('qr-spinner').style.display = 'none';
+      document.getElementById('qr-status').textContent = '✅ Bot is connected!';
+      document.getElementById('qr-status').style.color = 'var(--success)';
+    }
+  } catch(e) {
+    document.getElementById('status-info').innerHTML = '<p style="color:var(--text2)">Bot not reachable</p>';
+  }
+}
+
+async function getPairCode() {
+  const phone = document.getElementById('phone-input').value.trim();
+  if (!phone) return toast('Enter a phone number', 'error');
+  const btn = document.getElementById('pair-btn');
+  btn.disabled = true; btn.textContent = '⏳ Generating...';
+  try {
+    const res = await fetch('/api/pair', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    });
+    const data = await res.json();
+    if (data.code) {
+      document.getElementById('pair-code-display').textContent = data.code;
+      document.getElementById('pair-result').style.display = 'block';
+      toast('Pair code generated!', 'success');
+    } else {
+      toast(data.error || 'Failed to generate code', 'error');
+    }
+  } catch(e) { toast(e.message, 'error'); }
+  btn.disabled = false; btn.innerHTML = '⚡ Generate Pair Code';
+}
+
+loadStatus();
+setInterval(loadStatus, 8000);
+</script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASA MD — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Kanit:wght@300;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#050709;
+  --surface:rgba(0,255,100,0.03);
+  --border:rgba(0,255,100,0.12);
+  --border-hi:rgba(0,255,100,0.35);
+  --green:#00ff64;
+  --green2:#00cc50;
+  --amber:#ffb800;
+  --red:#ff3c3c;
+  --text:#c8ffd0;
+  --muted:rgba(160,255,180,0.38);
+  --mono:'IBM Plex Mono',monospace;
+  --display:'Kanit',sans-serif;
+}
+
+body{
+  font-family:var(--mono);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+/* ── CRT scanline overlay ── */
+body::after{
+  content:'';
+  position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);
+}
+
+/* ── Grid bg ── */
+.grid-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,255,100,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,100,0.025) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+
+/* ── Glow orb ── */
+.orb{
+  position:fixed;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,255,100,0.04),transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;z-index:0;
+  animation:orbPulse 4s ease-in-out infinite;
+}
+@keyframes orbPulse{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}}
+
+/* ── Corner decorations ── */
+.corner{position:fixed;width:60px;height:60px;pointer-events:none;z-index:1}
+.corner-tl{top:20px;left:20px;border-top:2px solid var(--border);border-left:2px solid var(--border)}
+.corner-tr{top:20px;right:20px;border-top:2px solid var(--border);border-right:2px solid var(--border)}
+.corner-bl{bottom:20px;left:20px;border-bottom:2px solid var(--border);border-left:2px solid var(--border)}
+.corner-br{bottom:20px;right:20px;border-bottom:2px solid var(--border);border-right:2px solid var(--border)}
+
+/* ── Blinking cursor ── */
+.cursor{display:inline-block;width:9px;height:1.1em;background:var(--green);vertical-align:text-bottom;animation:blink 1.1s step-end infinite;margin-left:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── Card ── */
+.card{
+  position:relative;z-index:2;
+  width:100%;max-width:440px;
+  padding:48px 40px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:4px;
+  box-shadow:0 0 40px rgba(0,255,100,0.06),0 0 120px rgba(0,0,0,0.8),inset 0 1px 0 rgba(0,255,100,0.08);
+  backdrop-filter:blur(8px);
+}
+
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);
+  animation:scanLine 3s ease-in-out infinite;
+}
+@keyframes scanLine{0%{opacity:0.3}50%{opacity:1}100%{opacity:0.3}}
+
+/* ── Header ── */
+.header{margin-bottom:36px}
+
+.header-tag{
+  font-size:0.68rem;color:var(--muted);letter-spacing:0.2em;
+  text-transform:uppercase;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.header-tag::before{content:'//';color:var(--green);opacity:0.6}
+
+.header-title{
+  font-family:var(--display);
+  font-size:2rem;font-weight:700;line-height:1;
+  color:var(--green);
+  text-shadow:0 0 30px rgba(0,255,100,0.4);
+  margin-bottom:4px;
+  letter-spacing:0.04em;
+}
+
+.header-sub{font-size:0.75rem;color:var(--muted);letter-spacing:0.05em}
+
+/* ── Fields ── */
+.field{margin-bottom:20px}
+
+.field-label{
+  font-size:0.68rem;color:var(--muted);letter-spacing:0.15em;
+  text-transform:uppercase;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.field-label .sym{color:var(--green);opacity:0.7}
+
+.field-input{
+  width:100%;padding:12px 14px;
+  background:rgba(0,255,100,0.03);
+  border:1px solid var(--border);border-radius:3px;
+  color:var(--text);font-family:var(--mono);font-size:0.88rem;
+  outline:none;transition:all 0.2s ease;
+  letter-spacing:0.02em;
+}
+.field-input:focus{
+  border-color:var(--green);
+  background:rgba(0,255,100,0.06);
+  box-shadow:0 0 0 3px rgba(0,255,100,0.08),0 0 20px rgba(0,255,100,0.05);
+}
+.field-input::placeholder{color:rgba(160,255,180,0.2)}
+
+/* ── Login button ── */
+.btn{
+  width:100%;padding:14px;
+  background:transparent;
+  border:1px solid var(--green);border-radius:3px;
+  color:var(--green);font-family:var(--mono);font-size:0.88rem;
+  font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.25s ease;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn::before{
+  content:'';position:absolute;inset:0;
+  background:var(--green);transform:scaleX(0);transform-origin:left;
+  transition:transform 0.3s ease;z-index:0;
+}
+.btn:hover::before{transform:scaleX(1)}
+.btn:hover{color:#000;text-shadow:none}
+.btn span{position:relative;z-index:1}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn:disabled::before{display:none}
+
+/* ── Error ── */
+.error{
+  display:none;margin-top:16px;padding:12px 14px;
+  background:rgba(255,60,60,0.06);border:1px solid rgba(255,60,60,0.2);
+  border-radius:3px;color:var(--red);font-size:0.8rem;
+  letter-spacing:0.03em;
+  animation:glitch 0.3s ease;
+}
+.error.show{display:flex;align-items:center;gap:8px}
+.error::before{content:'!';display:inline-block;width:18px;height:18px;min-width:18px;
+  border:1px solid var(--red);border-radius:50%;text-align:center;line-height:16px;font-size:0.7rem}
+@keyframes glitch{0%{transform:translateX(-4px)}25%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:none}}
+
+/* ── Footer ── */
+.footer{
+  margin-top:28px;padding-top:20px;border-top:1px solid var(--border);
+  font-size:0.68rem;color:var(--muted);
+  display:flex;justify-content:space-between;align-items:center;
+}
+
+/* ── Redirect info ── */
+.redirect-note{
+  margin-top:16px;padding:12px 14px;
+  background:rgba(255,184,0,0.04);border:1px solid rgba(255,184,0,0.12);
+  border-radius:3px;font-size:0.76rem;color:var(--amber);
+  display:flex;align-items:flex-start;gap:8px;line-height:1.4;
+}
+.redirect-note::before{content:'?';flex-shrink:0;margin-top:1px}
+
+@media(max-width:480px){
+  .card{padding:32px 24px}
+  .header-title{font-size:1.6rem}
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="orb"></div>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<div class="card">
+  <div class="header">
+    <div class="header-tag">AUTH_MODULE / SETTINGS ACCESS</div>
+    <div class="header-title">SASA MD<div class="cursor"></div></div>
+    <div class="header-sub">Enter credentials from WhatsApp</div>
+  </div>
+
+  <div class="field">
+    <div class="field-label"><span class="sym">&gt;</span> PHONE NUMBER</div>
+    <input class="field-input" type="tel" id="phone" placeholder="94712345678" inputmode="numeric" autocomplete="off">
+  </div>
+  <div class="field">
+    <div class="field-label"><span class="sym">&gt;</span> LOGIN KEY</div>
+    <input class="field-input" type="text" id="key" placeholder="Paste 64-character key from WhatsApp..." spellcheck="false" autocomplete="off">
+  </div>
+
+  <button class="btn" id="loginBtn" onclick="doLogin()">
+    <span id="btnIcon">$</span>
+    <span id="btnText">AUTHENTICATE</span>
+  </button>
+
+  <div class="error" id="loginError"></div>
+
+  <div class="redirect-note">
+    Send <strong>.settings</strong> to the bot in a private chat to receive your login key.
+  </div>
+
+  <div class="footer">
+    <span>SASA MD v2.0.0</span>
+    <span>🔒 Secure Access</span>
+  </div>
+</div>
+
+<script>
+async function doLogin() {
+  const phone = document.getElementById('phone').value.trim().replace(/[^0-9]/g,'');
+  const key   = document.getElementById('key').value.trim();
+  const err   = document.getElementById('loginError');
+  const btn   = document.getElementById('loginBtn');
+
+  err.className = 'error';
+  if (!phone || !key) { showErr('Phone and login key are required.'); return; }
+
+  btn.disabled = true;
+  document.getElementById('btnIcon').textContent = '⌛';
+  document.getElementById('btnText').textContent = 'AUTHENTICATING...';
+
+  try {
+    const res  = await fetch('/api/settings/login', {
+      method: 'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ phone, key }),
+    });
+    const data = await res.json();
+
+    if (!data.ok) {
+      showErr(data.error || 'Authentication failed.');
+      btn.disabled = false;
+      document.getElementById('btnIcon').textContent = '$';
+      document.getElementById('btnText').textContent = 'TRY AGAIN';
+      return;
+    }
+
+    // Store session
+    sessionStorage.setItem('sasa_session', data.sessionToken);
+    sessionStorage.setItem('sasa_phone',   data.phone);
+
+    document.getElementById('btnIcon').textContent = '✓';
+    document.getElementById('btnText').textContent = 'ACCESS GRANTED';
+
+    setTimeout(() => window.location.href = '/settings', 700);
+
+  } catch {
+    showErr('Network error. Check connection.');
+    btn.disabled = false;
+    document.getElementById('btnIcon').textContent = '$';
+    document.getElementById('btnText').textContent = 'TRY AGAIN';
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.className = 'error show';
+}
+
+// If already have session, redirect directly
+(async () => {
+  const s = sessionStorage.getItem('sasa_session');
+  if (s) {
+    const r = await fetch('/api/settings/data',{headers:{'x-session-token':s}}).then(r=>r.json()).catch(()=>null);
+    if (r?.ok) window.location.href = '/settings';
+  }
+  document.getElementById('key').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+})();
+</script>
+</body>
+</html>

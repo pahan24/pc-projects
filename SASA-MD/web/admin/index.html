@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESTRICTED ACCESS</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080306;--bg2:#0e080b;
+  --surface:rgba(200,0,30,0.04);--surface2:rgba(200,0,30,0.07);
+  --border:rgba(200,0,30,0.15);--border-hi:rgba(200,0,30,0.35);
+  --red:#cc001e;--red2:#ff1a3a;--red-glow:rgba(200,0,30,0.25);
+  --amber:#ffaa00;--green:#00e060;--blue:#0af;
+  --text:#f0dde0;--muted:rgba(220,160,170,0.4);
+  --mono:'Share Tech Mono',monospace;--display:'Bebas Neue',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:100vh}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 6px)}
+
+/* ── BG ── */
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(200,0,30,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(200,0,30,0.02) 1px,transparent 1px);
+  background-size:40px 40px}
+.bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(200,0,30,0.06),transparent)}
+
+/* ── Login screen ── */
+#loginScreen{
+  position:fixed;inset:0;z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);
+}
+#loginScreen.gone{display:none}
+
+.login-wrap{
+  width:100%;max-width:400px;padding:20px;
+  text-align:center;
+}
+
+.classified-stamp{
+  font-family:var(--display);font-size:3.5rem;letter-spacing:0.2em;
+  color:var(--red2);opacity:0.15;
+  border:4px solid var(--red);border-radius:8px;
+  padding:6px 20px;display:inline-block;
+  transform:rotate(-8deg);margin-bottom:32px;
+  text-shadow:0 0 30px var(--red-glow);
+  position:relative;
+}
+.classified-stamp::after{content:'';position:absolute;inset:4px;border:1px solid var(--red);border-radius:4px;opacity:0.3}
+
+.login-title{
+  font-family:var(--display);font-size:2rem;letter-spacing:0.15em;
+  color:var(--red2);text-shadow:0 0 30px var(--red-glow);margin-bottom:4px;
+}
+.login-sub{font-size:0.72rem;color:var(--muted);letter-spacing:0.1em;margin-bottom:32px;text-transform:uppercase}
+
+.field{margin-bottom:14px;text-align:left}
+.field label{display:block;font-size:0.65rem;color:var(--muted);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:6px}
+.field input{
+  width:100%;padding:12px 14px;
+  background:rgba(200,0,30,0.04);border:1px solid var(--border);border-radius:2px;
+  color:var(--text);font-family:var(--mono);font-size:0.85rem;outline:none;transition:all 0.2s;
+}
+.field input:focus{border-color:var(--red2);background:rgba(200,0,30,0.07);box-shadow:0 0 0 2px rgba(200,0,30,0.12)}
+.field input::placeholder{color:rgba(220,160,170,0.2)}
+
+.btn-login{
+  width:100%;padding:13px;margin-top:6px;
+  background:transparent;border:1px solid var(--red);border-radius:2px;
+  color:var(--red2);font-family:var(--display);font-size:1.3rem;letter-spacing:0.2em;
+  cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;
+}
+.btn-login::before{content:'';position:absolute;inset:0;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;z-index:0}
+.btn-login:hover::before{transform:scaleX(1)}
+.btn-login:hover{color:#fff}
+.btn-login span{position:relative;z-index:1}
+.btn-login:disabled{opacity:0.4;cursor:not-allowed}
+.btn-login:disabled::before{display:none}
+
+.login-err{
+  display:none;margin-top:12px;padding:10px 14px;
+  background:rgba(200,0,30,0.08);border:1px solid rgba(200,0,30,0.25);border-radius:2px;
+  color:var(--red2);font-size:0.78rem;letter-spacing:0.04em;
+}
+.login-err.show{display:block}
+
+/* ── Main app ── */
+#app{display:none;position:relative;z-index:1}
+
+/* ── Topbar ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,3,6,0.95);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;height:54px;
+  display:flex;align-items:center;gap:14px;
+}
+.topbar-logo{font-family:var(--display);font-size:1.3rem;letter-spacing:0.15em;color:var(--red2);text-shadow:0 0 20px var(--red-glow)}
+.topbar-badge{font-size:0.6rem;color:var(--muted);letter-spacing:0.12em;opacity:0.7;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.status-pill{
+  display:flex;align-items:center;gap:6px;font-size:0.68rem;
+  padding:3px 10px;border-radius:2px;
+}
+.status-pill.connected{background:rgba(0,224,96,0.07);border:1px solid rgba(0,224,96,0.2);color:var(--green)}
+.status-pill.disconnected{background:rgba(200,0,30,0.07);border:1px solid var(--border);color:var(--red2)}
+.status-dot2{width:6px;height:6px;border-radius:50%}
+.connected .status-dot2{background:var(--green);animation:dot2p 1.5s infinite}
+.disconnected .status-dot2{background:var(--red2)}
+@keyframes dot2p{0%,100%{opacity:1}50%{opacity:0.3}}
+.btn-top{padding:4px 10px;border-radius:2px;font-family:var(--mono);font-size:0.68rem;cursor:pointer;transition:all 0.2s;border:1px solid}
+.btn-logout2{border-color:var(--border);background:transparent;color:var(--muted)}
+.btn-logout2:hover{border-color:var(--border-hi);color:var(--text)}
+
+/* ── Content ── */
+.content{max-width:1040px;margin:0 auto;padding:24px 20px 60px}
+
+/* ── Stats row ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:700px){.stats-row{grid-template-columns:1fr 1fr}}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:3px;
+  padding:18px;position:relative;overflow:hidden;
+}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:0.5}
+.stat-val{font-family:var(--display);font-size:2rem;letter-spacing:0.05em;color:var(--red2);line-height:1;text-shadow:0 0 20px var(--red-glow)}
+.stat-label{font-size:0.65rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-top:4px}
+
+/* ── Section ── */
+.sec{
+  background:var(--surface);border:1px solid var(--border);border-radius:3px;
+  margin-bottom:12px;overflow:hidden;
+}
+.sec-header2{
+  padding:12px 18px;
+  background:rgba(200,0,30,0.04);border-bottom:1px solid var(--border);
+  font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--red2);
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;user-select:none;
+}
+.sec-header2::before{content:'▶';font-size:0.6rem;transition:transform 0.2s}
+.sec-header2.open::before{transform:rotate(90deg)}
+.sec-body{display:none;padding:18px}
+.sec-body.open{display:block}
+
+/* ── Action groups ── */
+.action-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.a-input{
+  flex:1;min-width:140px;padding:9px 12px;
+  background:rgba(200,0,30,0.04);border:1px solid var(--border);border-radius:2px;
+  color:var(--text);font-family:var(--mono);font-size:0.82rem;outline:none;transition:all 0.2s;
+}
+.a-input:focus{border-color:var(--red2);background:rgba(200,0,30,0.07)}
+.a-input::placeholder{color:rgba(220,160,170,0.2)}
+.a-input[type=number]{max-width:110px}
+
+.a-btn{
+  padding:9px 16px;border-radius:2px;font-family:var(--mono);font-size:0.78rem;
+  letter-spacing:0.06em;cursor:pointer;transition:all 0.2s;border:1px solid;white-space:nowrap;
+}
+.a-btn-red{background:rgba(200,0,30,0.08);border-color:var(--border);color:var(--red2)}
+.a-btn-red:hover{background:rgba(200,0,30,0.18);border-color:var(--red2)}
+.a-btn-green{background:rgba(0,224,96,0.06);border-color:rgba(0,224,96,0.2);color:var(--green)}
+.a-btn-green:hover{background:rgba(0,224,96,0.12)}
+.a-btn-amber{background:rgba(255,170,0,0.06);border-color:rgba(255,170,0,0.2);color:var(--amber)}
+.a-btn-amber:hover{background:rgba(255,170,0,0.14)}
+.a-btn-blue{background:rgba(0,170,255,0.06);border-color:rgba(0,170,255,0.2);color:var(--blue)}
+.a-btn-blue:hover{background:rgba(0,170,255,0.12)}
+
+.result-box{
+  padding:10px 12px;background:rgba(0,0,0,0.3);border-radius:2px;border:1px solid var(--border);
+  font-size:0.75rem;color:var(--muted);min-height:40px;line-height:1.6;
+  font-family:var(--mono);white-space:pre-wrap;word-break:break-all;
+  display:none;margin-top:10px;
+}
+.result-box.show{display:block}
+.result-box.ok{border-color:rgba(0,224,96,0.2);color:var(--green)}
+.result-box.err{border-color:rgba(200,0,30,0.25);color:var(--red2)}
+
+/* ── Danger zone ── */
+.danger-row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ── Log viewer ── */
+.log-box{
+  background:#000;border:1px solid rgba(200,0,30,0.12);border-radius:2px;
+  padding:14px;height:280px;overflow-y:auto;
+  font-size:0.7rem;line-height:1.6;color:rgba(200,255,200,0.7);
+  font-family:var(--mono);
+}
+.log-box::-webkit-scrollbar{width:4px}
+.log-box::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* ── Keys table ── */
+.keys-table{width:100%;border-collapse:collapse;font-size:0.72rem}
+.keys-table th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--muted);letter-spacing:0.1em;font-weight:400}
+.keys-table td{padding:8px 10px;border-bottom:1px solid rgba(200,0,30,0.06);vertical-align:middle}
+.keys-table tr:hover td{background:rgba(200,0,30,0.03)}
+.revoked-badge{padding:2px 8px;background:rgba(200,0,30,0.1);border:1px solid rgba(200,0,30,0.2);border-radius:2px;font-size:0.65rem;color:var(--red2)}
+.active-badge{padding:2px 8px;background:rgba(0,224,96,0.08);border:1px solid rgba(0,224,96,0.2);border-radius:2px;font-size:0.65rem;color:var(--green)}
+
+/* ── Broadcast textarea ── */
+textarea.a-input{min-height:80px;resize:vertical;width:100%;flex:none;padding:10px 12px}
+
+/* ── Toast ── */
+.toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+.toast{padding:9px 18px;border-radius:2px;font-size:0.75rem;font-family:var(--mono);letter-spacing:0.05em;animation:toastIn 0.3s ease}
+.toast.ok{background:rgba(0,224,96,0.1);border:1px solid rgba(0,224,96,0.25);color:var(--green)}
+.toast.err{background:rgba(200,0,30,0.1);border:1px solid rgba(200,0,30,0.25);color:var(--red2)}
+.toast.info{background:rgba(0,170,255,0.1);border:1px solid rgba(0,170,255,0.2);color:var(--blue)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+@media(max-width:600px){
+  .topbar{padding:0 14px}
+  .content{padding:14px 12px 60px}
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<!-- ════ LOGIN SCREEN ════ -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="classified-stamp">CLASSIFIED</div>
+    <div class="login-title">ADMIN PANEL</div>
+    <div class="login-sub">SASA MD Control Center — Restricted Access</div>
+
+    <div class="field">
+      <label>ADMIN USERNAME</label>
+      <input type="text" id="aUser" placeholder="Username" autocomplete="off" autocapitalize="off">
+    </div>
+    <div class="field">
+      <label>ADMIN PASSWORD</label>
+      <input type="password" id="aPass" placeholder="••••••••••••">
+    </div>
+
+    <button class="btn-login" id="aLoginBtn" onclick="doAdminLogin()">
+      <span id="aLoginText">AUTHENTICATE</span>
+    </button>
+
+    <div class="login-err" id="aLoginErr"></div>
+  </div>
+</div>
+
+<!-- ════ MAIN APP ════ -->
+<div id="app">
+  <div class="topbar">
+    <span class="topbar-logo">⚡ SASA MD</span>
+    <span class="topbar-badge">// ADMIN</span>
+    <div class="topbar-right">
+      <div class="status-pill connected" id="botStatusPill">
+        <div class="status-dot2"></div>
+        <span id="botStatusTxt">Online</span>
+      </div>
+      <button class="btn-top btn-logout2" onclick="adminLogout()">LOGOUT</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="stat-val" id="statUsers">—</div><div class="stat-label">Total Users</div></div>
+      <div class="stat-card"><div class="stat-val" id="statGroups">—</div><div class="stat-label">Groups</div></div>
+      <div class="stat-card"><div class="stat-val" id="statKeys">—</div><div class="stat-label">Active Keys</div></div>
+      <div class="stat-card"><div class="stat-val" id="statUptime" style="font-size:1.2rem">—</div><div class="stat-label">Uptime</div></div>
+    </div>
+
+    <!-- System Info -->
+    <div class="sec" id="secSystem">
+      <div class="sec-header2 open" onclick="toggle('secSystem')">SYSTEM INFORMATION</div>
+      <div class="sec-body open" id="secSystemBody">
+        <div id="sysInfo" style="font-size:0.78rem;color:var(--muted);line-height:2">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="sec">
+      <div class="sec-header2" onclick="toggle(this.closest('.sec'))">⚠️ DANGER ZONE — BOT CONTROL</div>
+      <div class="sec-body">
+        <div class="danger-row">
+          <button class="a-btn a-btn-amber" onclick="confirmAction('restart')">🔄 RESTART BOT</button>
+          <button class="a-btn a-btn-red"   onclick="confirmAction('shutdown')">🛑 SHUTDOWN BOT</button>
+        </div>
+        <div class="result-box" id="dangerResult"></div>
+      </div>
+    </div>
+
+    <!-- Broadcast -->
+    <div class="sec">
+      <div class="sec-header2" onclick="toggle(this.closest('.sec'))">📢 BROADCAST MESSAGE</div>
+      <div class="sec-body">
+        <textarea class="a-input" id="bcMsg" placeholder="Enter broadcast message..." rows="3"></textarea>
+        <div class="action-row" style="margin-top:10px">
+          <button class="a-btn a-btn-blue" onclick="doBroadcast()">📡 SEND TO ALL USERS</button>
+        </div>
+        <div class="result-box" id="bcResult"></div>
+      </div>
+    </div>
+
+    <!-- Ban / Unban -->
+    <div class="sec">
+      <div class="sec-header2" onclick="toggle(this.closest('.sec'))">🚫 BAN / UNBAN USERS</div>
+      <div class="sec-body">
+        <div class="action-row">
+          <input type="tel" class="a-input" id="banPhone" placeholder="Phone number (94712345678)" inputmode="numeric">
+          <button class="a-btn a-btn-red"   onclick="doBan()">BAN</button>
+          <button class="a-btn a-btn-green" onclick="doUnban()">UNBAN</button>
+        </div>
+        <div class="result-box" id="banResult"></div>
+      </div>
+    </div>
+
+    <!-- Coins -->
+    <div class="sec">
+      <div class="sec-header2" onclick="toggle(this.closest('.sec'))">💰 COIN MANAGEMENT</div>
+      <div class="sec-body">
+        <div class="action-row">
+          <input type="tel"    class="a-input" id="coinPhone"  placeholder="Phone number" inputmode="numeric">
+          <input type="number" class="a-input" id="coinAmount" placeholder="Amount" min="1">
+          <button class="a-btn a-btn-green" onclick="doCoins('add')">ADD COINS</button>
+          <button class="a-btn a-btn-red"   onclick="doCoins('remove')">REMOVE</button>
+        </div>
+        <div class="result-box" id="coinResult"></div>
+      </div>
+    </div>
+
+    <!-- Revoke key -->
+    <div class="sec">
+      <div class="sec-header2" onclick="toggle(this.closest('.sec'))">🔑 LOGIN KEY MANAGEMENT</div>
+      <div class="sec-body">
+        <div class="action-row">
+          <input type="tel" class="a-input" id="revokePhone" placeholder="Phone to revoke key" inputmode="numeric">
+          <button class="a-btn a-btn-amber" onclick="doRevokeKey()">REVOKE KEY</button>
+        </div>
+        <div class="result-box" id="revokeResult"></div>
+        <div style="margin-top:14px">
+          <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">ACTIVE KEYS</div>
+          <div id="keysTable">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="sec">
+      <div class="sec-header2" onclick="toggle(this.closest('.sec'))">📋 BOT LOGS</div>
+      <div class="sec-body">
+        <div class="action-row" style="margin-bottom:10px">
+          <button class="a-btn a-btn-blue" onclick="loadLogs()">🔄 REFRESH LOGS</button>
+        </div>
+        <div class="log-box" id="logBox">No logs loaded.</div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  SASA MD Admin Panel
+// ════════════════════════════════════════════════
+let ADMIN_TOKEN = null;
+
+const $ = id => document.getElementById(id);
+const toast = (msg, type='info', ms=3000) => {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  $('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), ms);
+};
+
+async function api(method, url, body) {
+  const opts = { method, headers: {'Content-Type':'application/json','x-admin-token':ADMIN_TOKEN} };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(url, opts).then(r=>r.json()).catch(()=>({ok:false,error:'Network error'}));
+}
+
+// ── Login ─────────────────────────────────────────
+async function doAdminLogin() {
+  const username = $('aUser').value.trim();
+  const password = $('aPass').value;
+  const errEl    = $('aLoginErr');
+  const btn      = $('aLoginBtn');
+
+  if (!username || !password) {
+    errEl.textContent = 'Username and password required.';
+    errEl.className='login-err show'; return;
+  }
+  btn.disabled=true; $('aLoginText').textContent='VERIFYING...';
+  errEl.className='login-err';
+
+  const res = await fetch('/api/admin/login',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({username,password}),
+  }).then(r=>r.json()).catch(()=>({ok:false,error:'Network error'}));
+
+  if (!res.ok) {
+    errEl.textContent = '⚠ ' + (res.error||'Access denied.');
+    errEl.className='login-err show';
+    btn.disabled=false; $('aLoginText').textContent='AUTHENTICATE';
+    return;
+  }
+
+  ADMIN_TOKEN = res.token;
+  sessionStorage.setItem('sasa_admin_token', ADMIN_TOKEN);
+  $('loginScreen').classList.add('gone');
+  $('app').style.display = 'block';
+  loadDashboard();
+}
+
+function adminLogout() {
+  ADMIN_TOKEN=null; sessionStorage.removeItem('sasa_admin_token');
+  $('loginScreen').classList.remove('gone');
+  $('app').style.display='none';
+}
+
+// ── Dashboard ─────────────────────────────────────
+async function loadDashboard() {
+  const res = await api('GET','/api/admin/stats');
+  if (!res.ok) { toast('Failed to load stats','err'); return; }
+
+  $('statUsers').textContent  = res.userCount  || 0;
+  $('statGroups').textContent = res.groupCount || 0;
+  $('statKeys').textContent   = (res.activeKeys||[]).length;
+  $('statUptime').textContent = res.uptime     || '—';
+
+  const pill = $('botStatusPill');
+  const txt  = $('botStatusTxt');
+  if (res.botConnected) {
+    pill.className='status-pill connected'; txt.textContent='Online';
+  } else {
+    pill.className='status-pill disconnected'; txt.textContent='Offline';
+  }
+
+  $('sysInfo').innerHTML = [
+    `<span style="color:var(--red2)">NODE</span>   ${res.nodeVersion||'?'}`,
+    `<span style="color:var(--red2)">MEMORY</span> ${res.memUsed||'?'} / ${res.memTotal||'?'}`,
+    `<span style="color:var(--red2)">UPTIME</span> ${res.uptime||'?'}`,
+    `<span style="color:var(--red2)">USERS</span>  ${res.userCount||0}`,
+    `<span style="color:var(--red2)">GROUPS</span> ${res.groupCount||0}`,
+    `<span style="color:var(--red2)">KEYS</span>   ${res.keyCount||0} total`,
+  ].join('<br>');
+
+  // Load keys table
+  if (Array.isArray(res.activeKeys)) {
+    renderKeysTable(res.activeKeys);
+  }
+}
+
+function renderKeysTable(keys) {
+  if (!keys.length) { $('keysTable').textContent='No keys found.'; return; }
+  let html = `<table class="keys-table"><tr><th>KEY</th><th>PHONE</th><th>CREATED</th><th>LAST USED</th><th>STATUS</th></tr>`;
+  for (const k of keys) {
+    const badge = k.revoked
+      ? '<span class="revoked-badge">REVOKED</span>'
+      : '<span class="active-badge">ACTIVE</span>';
+    html += `<tr>
+      <td style="font-family:var(--mono);color:var(--muted)">${k.keyPreview}</td>
+      <td>${k.phone}</td>
+      <td style="color:var(--muted);font-size:0.68rem">${k.createdAt?new Date(k.createdAt).toLocaleDateString():'-'}</td>
+      <td style="color:var(--muted);font-size:0.68rem">${k.lastUsed?new Date(k.lastUsed).toLocaleString():'-'}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }
+  html += '</table>';
+  $('keysTable').innerHTML = html;
+}
+
+// ── Actions ───────────────────────────────────────
+async function confirmAction(action) {
+  const label = action==='restart'?'RESTART':'SHUTDOWN';
+  const msg   = `Are you sure you want to ${label} the bot?`;
+  if (!confirm(msg)) return;
+  const res = await api('POST', `/api/admin/${action}`);
+  showResult('dangerResult', res.ok, res.message || res.error);
+  if (res.ok) toast(`${label} command sent`,'info');
+}
+
+async function doBroadcast() {
+  const msg = $('bcMsg').value.trim();
+  if (!msg) { showResult('bcResult',false,'Enter a message.'); return; }
+  showResult('bcResult',null,'Sending...');
+  const res = await api('POST','/api/admin/broadcast',{message:msg});
+  showResult('bcResult', res.ok, res.ok ? `Sent to ${res.sent} users` : res.error);
+  if (res.ok) { toast(`Broadcast sent to ${res.sent} users`,'ok'); $('bcMsg').value=''; }
+}
+
+async function doBan() {
+  const phone = $('banPhone').value.replace(/[^0-9]/g,'');
+  if (!phone) { showResult('banResult',false,'Enter phone.'); return; }
+  const res = await api('POST','/api/admin/ban',{phone});
+  showResult('banResult', res.ok, res.message || res.error);
+  if (res.ok) toast(`Banned ${phone}`,'ok');
+}
+
+async function doUnban() {
+  const phone = $('banPhone').value.replace(/[^0-9]/g,'');
+  if (!phone) { showResult('banResult',false,'Enter phone.'); return; }
+  const res = await api('POST','/api/admin/unban',{phone});
+  showResult('banResult', res.ok, res.message || res.error);
+  if (res.ok) toast(`Unbanned ${phone}`,'ok');
+}
+
+async function doCoins(action) {
+  const phone  = $('coinPhone').value.replace(/[^0-9]/g,'');
+  const amount = parseInt($('coinAmount').value);
+  if (!phone || !amount) { showResult('coinResult',false,'Enter phone and amount.'); return; }
+  const res = await api('POST',`/api/admin/coins/${action}`,{phone,amount});
+  showResult('coinResult', res.ok, res.ok ? JSON.stringify(res) : res.error);
+  if (res.ok) toast(`Coins ${action}: ${amount} for ${phone}`,'ok');
+}
+
+async function doRevokeKey() {
+  const phone = $('revokePhone').value.replace(/[^0-9]/g,'');
+  if (!phone) { showResult('revokeResult',false,'Enter phone.'); return; }
+  const res = await api('POST','/api/admin/keys/revoke',{phone});
+  showResult('revokeResult', res.ok, res.ok?`Key revoked for ${phone}`:res.error);
+  if (res.ok) { toast(`Key revoked for ${phone}`,'ok'); loadDashboard(); }
+}
+
+async function loadLogs() {
+  const res = await api('GET','/api/admin/logs');
+  if (!res.ok) { $('logBox').textContent='Failed to load logs.'; return; }
+  if (!res.logs?.length) { $('logBox').textContent='No log entries found.'; return; }
+  $('logBox').textContent = res.logs.slice(0,100).join('\n');
+  toast(`Loaded ${res.logs.length} log lines`,'info');
+}
+
+// ── Helpers ───────────────────────────────────────
+function showResult(id, ok, msg) {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = (ok===null?'⏳ ':ok?'✓ ':'✗ ') + (msg||'');
+  el.className   = `result-box show ${ok===null?'':ok?'ok':'err'}`;
+}
+
+function toggle(elOrId) {
+  const sec    = typeof elOrId==='string' ? $(elOrId) : elOrId.closest('.sec');
+  const header = sec.querySelector('.sec-header2');
+  const body   = sec.querySelector('.sec-body');
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ── Session restore ───────────────────────────────
+(async () => {
+  const stored = sessionStorage.getItem('sasa_admin_token');
+  if (stored) {
+    ADMIN_TOKEN = stored;
+    const res = await api('GET','/api/admin/stats').catch(()=>null);
+    if (res?.ok) {
+      $('loginScreen').classList.add('gone');
+      $('app').style.display='block';
+      // Populate from already-fetched stats
+      $('statUsers').textContent  = res.userCount  || 0;
+      $('statGroups').textContent = res.groupCount || 0;
+      $('statKeys').textContent   = (res.activeKeys||[]).length;
+      $('statUptime').textContent = res.uptime || '—';
+      $('sysInfo').innerHTML = [
+        `<span style="color:var(--red2)">NODE</span>   ${res.nodeVersion}`,
+        `<span style="color:var(--red2)">MEMORY</span> ${res.memUsed} / ${res.memTotal}`,
+        `<span style="color:var(--red2)">UPTIME</span> ${res.uptime}`,
+      ].join('<br>');
+      const pill=$('botStatusPill'),txt=$('botStatusTxt');
+      if(res.botConnected){pill.className='status-pill connected';txt.textContent='Online'}
+      else{pill.className='status-pill disconnected';txt.textContent='Offline'}
+      if(res.activeKeys) renderKeysTable(res.activeKeys);
+    } else {
+      ADMIN_TOKEN=null; sessionStorage.removeItem('sasa_admin_token');
+    }
+  }
+  $('aPass').addEventListener('keydown', e=>{ if(e.key==='Enter') doAdminLogin(); });
+  $('aUser').addEventListener('keydown', e=>{ if(e.key==='Enter') $('aPass').focus(); });
+})();
+</script>
+</body>
+</html>
